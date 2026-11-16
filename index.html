@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#090d18" />
+    <meta name="description" content="Universe Showdown — protótipo mobile-first de luta 2D." />
+    <title>Universe Showdown</title>
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="topbar">
+        <a class="brand" href="#" aria-label="Universe Showdown início"><span class="brand-mark">U</span><span>UNIVERSE <b>SHOWDOWN</b></span></a>
+        <span class="build-tag">PROTÓTIPO 01</span>
+      </header>
+      <section class="game-panel" aria-label="Arena de combate">
+        <div class="match-hud">
+          <div class="fighter-info player-info"><span>PLAYER 01</span><strong id="player-health-label">100</strong><div class="health-track"><i id="player-health"></i></div></div>
+          <div class="round-info"><span>ROUND</span><strong>01</strong><small id="status">READY</small></div>
+          <div class="fighter-info enemy-info"><span>CPU</span><strong id="enemy-health-label">100</strong><div class="health-track"><i id="enemy-health"></i></div></div>
+        </div>
+        <div class="arena-wrap">
+          <canvas id="arena" aria-label="Arena 2D. Use os controles na tela para mover e atacar." tabindex="0"></canvas>
+          <div class="portrait-hint" id="portrait-hint"><span>↻</span><b>GIRE SEU APARELHO</b><small>Jogue na horizontal para aproveitar a arena.</small></div>
+          <div class="arena-caption"><span>SECTOR 07</span><span>SIMULAÇÃO DE MOVIMENTO</span></div>
+        </div>
+        <div class="touch-controls" id="touch-controls">
+          <div class="movement-pad">
+            <button class="control move" data-action="left" aria-label="Mover para esquerda">◀</button>
+            <button class="control move" data-action="right" aria-label="Mover para direita">▶</button>
+            <div class="movement-extra"><button class="control utility" data-action="jump">PULAR</button><button class="control utility" data-action="crouch">BAIXAR</button></div>
+          </div>
+          <div class="attack-pad">
+            <button class="control attack light" data-action="lightAttack">LEVE</button>
+            <button class="control attack medium" data-action="mediumAttack">MÉDIO</button>
+            <button class="control attack heavy" data-action="heavyAttack">FORTE</button>
+            <button class="control attack kick" data-action="kick">CHUTE</button>
+          </div>
+        </div>
+      </section>
+      <footer class="footer"><span>TOUCHSCREEN MULTI-TOUCH ENABLED</span><button id="reset" type="button">REINICIAR TESTE ↻</button><span>DESKTOP: A / D · W · S · J K L U</span></footer>
+    </main>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
