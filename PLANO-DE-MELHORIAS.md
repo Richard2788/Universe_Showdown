@@ -9,23 +9,34 @@
 2. Primeiro garantir que o combate seja jogável e previsível por touchscreen, com multi-touch confiável.
 3. Depois adaptar a mesma experiência a teclado e gamepad em desktop.
 4. Em seguida melhorar apresentação, conteúdo e qualidade de vida.
-4. Só então investir em recursos online, progressão e sistemas persistentes.
+5. Só então investir em recursos online, progressão e sistemas persistentes.
 5. Cada melhoria deve ter critério de aceite e não pode comprometer recursos já estáveis.
 
 ## 2. Roadmap resumido
 
 | Etapa | Prioridade | Resultado esperado |
 |---|---|---|
-| A. Fundação técnica Mobile First | P0 | Projeto Vite, viewport mobile, safe areas, Canvas e loop estável. |
-| B. Protótipo de luta | P0 | Personagens, movimentação, ataques e colisões. |
-| C. Combate completo local | P0 | Defesa, dano, stun, IA, rounds e HUD. |
-| D. Controles Mobile First | P0 | Touchscreen multi-touch como controle primário; teclado/gamepad como adaptadores. |
-| E. Polimento e testes | P1 | Animações, áudio, acessibilidade e desempenho. |
-| F. Publicação | P0 | Build confiável e site publicado no Render. |
+| A. Fundação técnica Mobile First | P0 | Vite, viewport mobile, safe areas, Canvas e loop estável. |
+| B. Protótipo mobile de movimentação | P0 | Arena, lutadores provisórios, direcional e multi-touch validados em aparelho real. |
+| C. Fundação de combate | P0 | Estados, dados de ataques e colisões SAT.js. |
+| D. Combate funcional | P0 | Hitbox/hurtbox, dano, bloqueio, stun, pushback e depuração. |
+| E. Partida completa local | P0 | Vida, timer, rounds, resultado, reinício e IA. |
+| F. Adaptação desktop | P1 | Teclado e gamepad via InputManager compartilhado. |
+| G. Polimento e publicação | P0/P1 | Build, acessibilidade, desempenho, testes e Render. |
 | G. Conteúdo e expansão | P2 | Novos personagens, cenários e modos. |
 | H. Multiplayer online | P2 | Partidas online com validação no servidor. |
 
 ## 3. Backlog detalhado
+
+## Estado de implementação (2026-11)
+
+- [x] Scaffold Vite Vanilla na raiz, entrada HTML/CSS/JS e dependência `sat` declarada.
+- [x] Canvas com resolução lógica escalada e loop de simulação em passo fixo.
+- [x] Protótipo inicial com dois lutadores provisórios e movimentação touchscreen/teclado.
+- [ ] Validar multi-touch e ergonomia em aparelhos físicos Android/iOS.
+- [ ] Implementar combate real com SAT.js, IA, partida completa, gamepad e publicação.
+
+O protótipo atual não representa conclusão das etapas B–G. Marque itens como concluídos somente após implementação e teste verificáveis.
 
 ## Etapa A — Fundação técnica
 
