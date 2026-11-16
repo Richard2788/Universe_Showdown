@@ -2,7 +2,7 @@
 
 Jogo de luta tradicional em visão lateral, concebido sob a abordagem **Mobile First** e executado diretamente no navegador. A experiência principal é projetada primeiro para celulares, com combate preferencialmente em orientação horizontal e controles touchscreen multi-touch. A mesma aplicação será adaptada para computadores com teclado e gamepad. O projeto utilizará JavaScript, Canvas 2D, SAT.js e Vite. A primeira versão será uma partida local de um jogador contra um adversário controlado por IA.
 
-> **Status:** planejamento / pré-produção. Este repositório ainda precisa receber a implementação descrita neste documento. Não considere os comandos ou recursos como implementados até que os arquivos correspondentes existam e passem nos testes.
+ > **Status:** fundação técnica e protótipo inicial de movimentação implementados. O combate completo, a IA, o gamepad e a publicação ainda estão pendentes. O protótipo precisa ser validado em aparelhos físicos antes de considerar a etapa mobile aprovada.
 
 ## Visão geral
 
@@ -61,11 +61,12 @@ Consulte a versão mínima de Node indicada pela documentação da versão de Vi
 
 Se este repositório ainda não tiver `package.json` e os arquivos de aplicação, crie uma aplicação Vite JavaScript Vanilla:
 
+Este repositório já contém o scaffold Vite na raiz. Clone o repositório e instale as dependências:
+
 ```bash
-npm create vite@latest jogo-luta -- --template vanilla
-cd jogo-luta
+git clone https://github.com/Richard2788/Universe_Showdown.git
+cd Universe_Showdown
 npm install
-npm install sat
 ```
 
 O template Vanilla do Vite já inclui scripts básicos de desenvolvimento e build. Se os documentos deste repositório estiverem em outra pasta, copie-os para a raiz do projeto criado.
@@ -84,6 +85,8 @@ Abra no navegador o endereço local informado pelo Vite (normalmente `http://loc
 npm run build
 ```
 
+A versão atual usa `npm install` para instalação local. Após gerar e versionar `package-lock.json`, o deploy poderá usar `npm ci && npm run build`.
+
 O Vite gera os arquivos estáticos na pasta `dist/` por padrão.
 
 ### Visualizar a build localmente
@@ -93,6 +96,10 @@ npm run preview
 ```
 
 O comando `preview` serve a build gerada para uma verificação local. Ele não substitui um servidor de produção.
+
+## Estado atual do protótipo
+
+A fundação atual inclui Vite, Canvas 2D com escala lógica, loop fixo de simulação, dois lutadores provisórios e controles por Pointer Events multi-touch e teclado. A etapa é um protótipo de movimentação, não um jogo de luta completo: ataques ainda são simplificados e SAT.js está instalado como dependência, mas a integração de hitboxes/hurtboxes permanece pendente. Não há IA, rounds ou gamepad implementados.
 
 ## Controles planejados
 
@@ -120,10 +127,10 @@ O mapeamento pode mudar durante a implementação e deverá ser mantido em confi
 
 ## Estrutura de diretórios proposta
 
-A estrutura abaixo descreve a organização planejada. Os módulos serão adicionados progressivamente conforme cada sistema for implementado.
+Estrutura atual (módulos adicionais serão criados conforme os sistemas forem implementados):
 
 ```text
-jogo-luta/
+Universe_Showdown/
 ├── index.html
 ├── package.json
 ├── package-lock.json
@@ -135,6 +142,12 @@ jogo-luta/
 │       └── sounds/
 ├── src/
 │   ├── main.js
+│   ├── game/
+│   │   └── Game.js
+│   ├── fighters/
+│   │   └── Fighter.js
+│   ├── rendering/
+│   │   └── CanvasRenderer.js
 │   ├── game/
 │   ├── characters/
 │   ├── combat/
