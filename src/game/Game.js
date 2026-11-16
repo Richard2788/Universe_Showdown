@@ -12,8 +12,14 @@ export class Game {
     this.renderer = new CanvasRenderer(this.ctx, WIDTH, HEIGHT);
     this.input = {
       actions: Object.create(null),
-      set: (action, value) => { this.input.actions[action] = value; },
-      clear: () => { this.input.actions = Object.create(null); },
+      sources: new Map(),
+      set: (action, value, source = 'default') => {
+        if (!this.input.sources.has(action)) this.input.sources.set(action, new Set());
+        const active = this.input.sources.get(action);
+        if (value) active.add(source); else active.delete(source);
+        this.input.actions[action] = active.size > 0;
+      },
+      clear: () => { this.input.actions = Object.create(null); this.input.sources.clear(); },
     };
     this.player = new Fighter(300, '#51e3e8', 1);
     this.enemy = new Fighter(660, '#ff638c', -1);
