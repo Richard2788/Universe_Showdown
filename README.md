@@ -2,7 +2,7 @@
 
 Jogo de luta tradicional em visão lateral, concebido sob a abordagem **Mobile First** e executado diretamente no navegador. A experiência principal é projetada primeiro para celulares, com combate preferencialmente em orientação horizontal e controles touchscreen multi-touch. A mesma aplicação será adaptada para computadores com teclado e gamepad. O projeto utilizará JavaScript, Canvas 2D, SAT.js e Vite. A primeira versão será uma partida local de um jogador contra um adversário controlado por IA.
 
- > **Status:** fundação técnica e protótipo inicial de movimentação implementados. O combate completo, a IA, o gamepad e a publicação ainda estão pendentes. O protótipo precisa ser validado em aparelhos físicos antes de considerar a etapa mobile aprovada.
+> **Status:** fundação técnica e protótipo inicial de movimentação implementados. O combate completo, a IA, o gamepad e a publicação ainda estão pendentes. O protótipo precisa ser validado em aparelhos físicos antes de considerar a etapa mobile aprovada.
 
 ## Visão geral
 
@@ -85,7 +85,7 @@ Abra no navegador o endereço local informado pelo Vite (normalmente `http://loc
 npm run build
 ```
 
-A versão atual usa `npm install` para instalação local. Após gerar e versionar `package-lock.json`, o deploy poderá usar `npm ci && npm run build`.
+A versão atual usa `npm install` para instalação local. Após gerar e versionar `package-lock.json`, o deploy poderá usar `npm install && npm run build`.
 
 O Vite gera os arquivos estáticos na pasta `dist/` por padrão.
 
@@ -196,7 +196,7 @@ A primeira versão não exige backend: a luta contra a IA será executada no nav
 6. Abra a URL fornecida pelo Render primeiro em um celular real e depois em desktop.
 7. Verifique carregamento de imagens/sons, áreas seguras, orientação, controles multi-touch, HUD e início/fim de uma partida.
 
-Use `npm ci` quando o `package-lock.json` estiver versionado. Se o projeto usar outro gerenciador de pacotes, ajuste o comando de build de acordo com o lockfile.
+Depois que `package-lock.json` for gerado e versionado, prefira `npm ci && npm run build` para instalações reprodutíveis. No estado atual, use `npm install && npm run build`.
 
 ### Quando será necessário um backend?
 
