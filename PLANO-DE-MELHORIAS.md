@@ -6,11 +6,10 @@
 ## 1. Princípios de priorização
 
 1. Projetar e validar cada fluxo primeiro em celular real; Mobile First é requisito de aceite de todas as etapas.
-2. Primeiro garantir que o combate seja jogável e previsível por touchscreen, com multi-touch confiável.
-3. Depois adaptar a mesma experiência a teclado e gamepad em desktop.
-4. Em seguida melhorar apresentação, conteúdo e qualidade de vida.
-5. Só então investir em recursos online, progressão e sistemas persistentes.
-5. Cada melhoria deve ter critério de aceite e não pode comprometer recursos já estáveis.
+2. Implementar cedo um protótipo touchscreen de movimentação para validar ergonomia e multi-touch antes de expandir o combate.
+3. Construir a simulação e as regras de combate em módulos compartilhados, independentes do dispositivo de entrada.
+4. Adaptar teclado e gamepad para desktop somente depois de validar a experiência touchscreen.
+5. Investir em polimento, conteúdo e recursos online conforme os critérios de aceite e a prioridade do MVP.
 
 ## 2. Roadmap resumido
 
@@ -23,8 +22,8 @@
 | E. Partida completa local | P0 | Vida, timer, rounds, resultado, reinício e IA. |
 | F. Adaptação desktop | P1 | Teclado e gamepad via InputManager compartilhado. |
 | G. Polimento e publicação | P0/P1 | Build, acessibilidade, desempenho, testes e Render. |
-| G. Conteúdo e expansão | P2 | Novos personagens, cenários e modos. |
-| H. Multiplayer online | P2 | Partidas online com validação no servidor. |
+| H. Conteúdo e expansão | P2 | Novos personagens, cenários e modos. |
+| I. Multiplayer online | P2 | Partidas online com validação no servidor. |
 
 ## 3. Backlog detalhado
 
