@@ -3,6 +3,10 @@
 > Documento de referência do produto e da implementação. Use este arquivo para orientar decisões de design, arquitetura, desenvolvimento, testes e futuras contribuições.  
 > Estado do projeto: **planejamento / pré-produção**. Os recursos descritos são requisitos e propostas; não devem ser considerados implementados até serem verificados no código.
 
+## Estado atual da implementação
+
+O repositório já possui o scaffold Vite na raiz e um protótipo inicial de arena/movimentação com Canvas 2D, simulação em passo fixo, controles touchscreen por Pointer Events multi-touch e teclado. Esta entrega ainda não implementa o combate completo, integração de hitboxes/hurtboxes com SAT.js, IA, rounds, gamepad ou publicação. A validação de ergonomia e multi-touch em aparelhos físicos continua obrigatória.
+
 ## 1. Visão do produto
 
 Desenvolver um jogo de luta 2D tradicional, em visão lateral, executado diretamente no navegador e concebido sob a abordagem **Mobile First**. A experiência principal será projetada primeiro para celulares, especialmente para partidas em orientação horizontal; a versão desktop será uma adaptação da mesma aplicação, com teclado e gamepad. O jogo terá confrontos um contra um, personagens com animações próprias, arena, barras de vida, cronômetro, rounds e um adversário controlado inicialmente por inteligência artificial local.
