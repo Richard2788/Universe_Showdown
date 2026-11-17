@@ -1,5 +1,19 @@
+/**
+ * CanvasRenderer — desenha arena, lutadores e HUD.
+ *
+ * Lutadores: se um SpriteAnimator (atlas) estiver disponível, desenha o
+ * frame atual da spritesheet; senão cai no desenho procedural original.
+ */
 export class CanvasRenderer {
-  constructor(ctx, width, height) { this.ctx = ctx; this.width = width; this.height = height; }
+  constructor(ctx, width, height) {
+    this.ctx = ctx; this.width = width; this.height = height;
+    this.animators = new Map(); // Fighter → SpriteAnimator
+  }
+
+  setAnimator(fighter, animator) {
+    this.animators.set(fighter, animator);
+  }
+
   draw(player, enemy, frame) {
     const c = this.ctx;
     const w = this.width, h = this.height;
@@ -18,10 +32,33 @@ export class CanvasRenderer {
     c.fillStyle = '#51e3e8'; c.fillRect(24, 48, 3, 18);
     c.fillStyle = '#d6e1f3'; c.font = 'bold 12px ui-monospace,monospace'; c.fillText('MOVE  •  JUMP  •  STRIKE', 36, 61);
   }
+
   drawFighter(f, label) {
     const c = this.ctx, x = f.x, floor = 420 - f.y;
     c.save(); c.translate(x, floor); c.scale(f.face, 1);
     c.globalAlpha = .22; c.fillStyle = '#000'; c.beginPath(); c.ellipse(0, 0, 42, 8, 0, 0, Math.PI * 2); c.fill(); c.globalAlpha = 1;
+    c.restore();
+
+    const animator = this.animators.get(f);
+    if (animator) {
+      // ── Pipeline atlas: recorta o frame atual da spritesheet ──
+      animator.draw(c, x, floor, f.face, 1.1);
+      if (animator.isActive()) {
+        // Feedback visual do frame de contato (futuro: efeito de impacto)
+        c.fillStyle = '#ffd866'; c.font = 'bold 10px ui-monospace,monospace'; c.textAlign = 'center';
+        c.fillText('!', x + f.face * 60, floor - 70);
+      }
+    } else {
+      this.drawFighterProcedural(f, x, floor);
+    }
+
+    c.fillStyle = f.color; c.font = 'bold 12px ui-monospace,monospace'; c.textAlign = 'center'; c.fillText(label, x, floor - 145);
+  }
+
+  /** Desenho procedural original (fallback enquanto não há atlas por lutador). */
+  drawFighterProcedural(f, x, floor) {
+    const c = this.ctx;
+    c.save(); c.translate(x, floor); c.scale(f.face, 1);
     const crouch = f.crouch ? .72 : 1;
     c.strokeStyle = f.color; c.lineWidth = 17; c.lineCap = 'round';
     c.beginPath(); c.moveTo(-8, -20); c.lineTo(-19, -4); c.lineTo(-31, 0); c.stroke();
@@ -33,6 +70,5 @@ export class CanvasRenderer {
     c.strokeStyle = f.color; c.lineWidth = 10; c.beginPath(); c.moveTo(30, -58); c.lineTo(47, -42); c.stroke();
     if (f.attack) { c.strokeStyle = f.color; c.lineWidth = 14; c.beginPath(); c.moveTo(4, -74); c.lineTo(72, -76); c.stroke(); }
     c.restore();
-    c.fillStyle = f.color; c.font = 'bold 12px ui-monospace,monospace'; c.textAlign = 'center'; c.fillText(label, x, floor - 145);
   }
 }

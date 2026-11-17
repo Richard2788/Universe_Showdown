@@ -1,5 +1,8 @@
 import { Fighter } from '../fighters/Fighter.js';
 import { CanvasRenderer } from '../rendering/CanvasRenderer.js';
+import { SpriteAnimator } from '../rendering/SpriteAnimator.js';
+import { ANIMATION_DATA } from '../characters/animations.js';
+import { buildPlaceholderAtlas } from '../characters/PlaceholderAtlas.js';
 
 const WIDTH = 960;
 const HEIGHT = 540;
@@ -23,6 +26,7 @@ export class Game {
     };
     this.player = new Fighter(300, '#51e3e8', 1);
     this.enemy = new Fighter(660, '#ff638c', -1);
+    this.setupAnimators();
     this.lastTime = 0;
     this.accumulator = 0;
     this.frame = 0;
@@ -30,6 +34,23 @@ export class Game {
     this.resizeObserver.observe(canvas);
     this.resize();
   }
+  /**
+   * Cria um SpriteAnimator por lutador usando a atlas placeholder.
+   * Quando a arte real existir, troque buildPlaceholderAtlas(...) por
+   * await loadAtlasImage('/assets/characters/knight/knight.png').
+   */
+  setupAnimators() {
+    const playerAtlas = buildPlaceholderAtlas('#51e3e8');
+    const enemyAtlas = buildPlaceholderAtlas('#ff638c');
+    this.fighterAnimators = new Map([
+      [this.player, new SpriteAnimator(playerAtlas, ANIMATION_DATA)],
+      [this.enemy, new SpriteAnimator(enemyAtlas, ANIMATION_DATA)],
+    ]);
+    for (const [fighter, animator] of this.fighterAnimators) {
+      this.renderer.setAnimator(fighter, animator);
+    }
+  }
+
   resize() {
     const rect = this.canvas.getBoundingClientRect();
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -56,6 +77,11 @@ export class Game {
     const actions = this.input.actions;
     this.player.update(dt, actions, this.enemy);
     this.enemy.update(dt, {}, this.player);
+    // Animação avança no MESMO passo fixo da simulação (não no render)
+    for (const [fighter, animator] of this.fighterAnimators) {
+      animator.setState(fighter.getState());
+      animator.update(dt);
+    }
     const distance = this.enemy.x - this.player.x;
     if (Math.abs(distance) < 78) {
       const overlap = 78 - Math.abs(distance);
@@ -84,6 +110,7 @@ export class Game {
   reset() {
     this.player = new Fighter(300, '#51e3e8', 1);
     this.enemy = new Fighter(660, '#ff638c', -1);
+    this.setupAnimators();
     this.frame = 0;
   }
 }
