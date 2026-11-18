@@ -9,7 +9,7 @@
 
 import { ANIMATION_DATA, ATLAS, FRAME } from './animations.js';
 
-const CELL = FRAME.width;
+const CELL = FRAME.frameWidth;
 
 /** Desenha um boneco dentro de uma célula 96×96 (pés na base da célula). */
 function drawPose(c, baseX, baseY, p, color) {
@@ -126,23 +126,23 @@ function poseFor(state, i, s) {
  */
 export function buildPlaceholderAtlas(color = '#9aabc4', data = ANIMATION_DATA) {
   const canvas = document.createElement('canvas');
-  canvas.width = ATLAS.columns * FRAME.width;   // 1824
-  canvas.height = ATLAS.rows * FRAME.height;    // 576
+  canvas.width = ATLAS.columns * FRAME.frameWidth;   // 1824
+  canvas.height = ATLAS.rows * FRAME.frameHeight;    // 576
   const c = canvas.getContext('2d');
 
   for (const [state, s] of Object.entries(data.states)) {
     for (let i = 0; i < s.frames; i++) {
-      const x = (s.col + i) * FRAME.width;
-      const y = s.row * FRAME.height;
+      const x = (s.col + i) * FRAME.frameWidth;
+      const y = s.row * FRAME.frameHeight;
       c.save();
       c.beginPath();
-      c.rect(x, y, FRAME.width, FRAME.height);
+      c.rect(x, y, FRAME.frameWidth, FRAME.frameHeight);
       c.clip();
       drawPose(c, x + ATLAS.pivotX, y + ATLAS.pivotY - 4, poseFor(state, i, s), color);
       // Frames ativos marcados com um tick no topo (auxílio visual de depuração)
       if (i >= (s.activeFrom ?? -1) && i <= (s.activeTo ?? -2)) {
         c.fillStyle = '#51e3e8';
-        c.fillRect(x + FRAME.width / 2 - 6, y + 4, 12, 3);
+        c.fillRect(x + FRAME.frameWidth / 2 - 6, y + 4, 12, 3);
       }
       c.restore();
     }

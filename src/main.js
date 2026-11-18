@@ -36,10 +36,23 @@ window.addEventListener('blur', clearTouch);
 document.addEventListener('visibilitychange', () => { if (document.hidden) clearTouch(); });
 window.addEventListener('pagehide', clearTouch);
 
-const keyMap = { a:'left', arrowleft:'left', d:'right', arrowright:'right', w:'jump', arrowup:'jump', s:'crouch', arrowdown:'crouch', j:'lightAttack', k:'mediumAttack', l:'heavyAttack', u:'kick' };
+const keyMap = { a:'left', arrowleft:'left', d:'right', arrowright:'right', w:'jump', arrowup:'jump', ' ':'jump', s:'crouch', arrowdown:'crouch', j:'lightAttack', k:'mediumAttack', l:'heavyAttack', u:'kick' };
 const keys = new Set();
 window.addEventListener('keydown', (event) => {
-  const action = keyMap[event.key.toLowerCase()];
+  const raw = event.key.toLowerCase();
+  // ── Atalhos do menu/IA: 1/2/3 = dificuldade, M = abrir menu ──
+  if (raw === '1' || raw === '2' || raw === '3') {
+    const diff = ['facil', 'medio', 'dificil'][Number(raw) - 1];
+    selectedDiff = diff;
+    selectDiffButton(diff);
+    game.setDifficulty(diff);
+    return;
+  }
+  if (raw === 'm' && !menuOverlay.classList.contains('is-open')) {
+    openMenu();
+    return;
+  }
+  const action = keyMap[raw];
   if (!action) return;
   event.preventDefault();
   keys.add(event.key);
@@ -54,3 +67,43 @@ window.addEventListener('keyup', (event) => {
 window.addEventListener('blur', () => { keys.clear(); game.input.clear(); });
 
 document.querySelector('#reset').addEventListener('click', () => game.reset());
+
+// ── Menu de início: dificuldade da CPU + modo (jogar vs CPU / CPU vs CPU) ──
+const menuOverlay = document.querySelector('#menu-overlay');
+const diffButtons = [...menuOverlay.querySelectorAll('[data-diff]')];
+// Pré-seleção: ?diff=... na URL; padrão FÁCIL (game.difficulty já valida).
+let selectedDiff = game.difficulty;
+
+function selectDiffButton(name) {
+  diffButtons.forEach((button) => button.classList.toggle('is-selected', button.dataset.diff === name));
+}
+selectDiffButton(selectedDiff);
+
+diffButtons.forEach((button) => {
+  button.addEventListener('click', () => {
+    selectedDiff = button.dataset.diff;
+    selectDiffButton(selectedDiff);
+    game.setDifficulty(selectedDiff);
+  });
+});
+
+function syncModeUI() {
+  // No modo espectador (CPU vs CPU) os controles de touch ficam ocultos.
+  const spectator = game.mode === 'cvc';
+  document.querySelector('#touch-controls').classList.toggle('is-hidden', spectator);
+}
+
+function closeMenuAndStart(mode) {
+  menuOverlay.classList.remove('is-open');
+  game.startMatch(mode);
+  syncModeUI();
+}
+
+function openMenu() {
+  menuOverlay.classList.add('is-open');
+  game.openMenu();
+}
+
+document.querySelector('#start-pvc').addEventListener('click', () => closeMenuAndStart('pvc'));
+document.querySelector('#start-cvc').addEventListener('click', () => closeMenuAndStart('cvc'));
+document.querySelector('#menu').addEventListener('click', openMenu);

@@ -1,0 +1,22 @@
+﻿{
+    "meta":  {
+                 "frameHeight":  320,
+                 "columns":  4,
+                 "pivotX":  160,
+                 "frameWidth":  320,
+                 "image":  "kick.png",
+                 "pivotY":  320,
+                 "rows":  1
+             },
+    "states":  {
+                   "kick":  {
+                                "activeTo":  2,
+                                "row":  0,
+                                "frameTime":  0.13,
+                                "loop":  false,
+                                "col":  0,
+                                "frames":  4,
+                                "activeFrom":  1
+                            }
+               }
+}

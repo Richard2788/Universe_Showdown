@@ -26,7 +26,9 @@
  *                 (src/fighters/Fighter.js): activeFrom ≈ activeStart/duration*frames.
  */
 
-export const FRAME = { width: 96, height: 96 };
+// Nomes alinhados com public/assets/characters/knight/knight.json:
+// o runtime (SpriteAnimator) lê meta.frameWidth / meta.frameHeight.
+export const FRAME = { frameWidth: 96, frameHeight: 96 };
 
 // Grade: 19 colunas × 6 linhas → atlas de 1824 × 576 px.
 export const ATLAS = {

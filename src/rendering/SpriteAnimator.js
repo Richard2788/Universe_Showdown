@@ -19,14 +19,30 @@ export class SpriteAnimator {
    * @param {object} data objeto no formato de src/characters/animations.js
    */
   constructor(atlas, data) {
-    this.atlas = atlas;
+    this.atlas = atlas;          // imagem única OU fallback do placeholder
     this.data = data;
     this.meta = data.meta;
+    this.stateImages = new Map(); // stateName → Image (uma atlas por estado)
     this.stateName = 'idle';
     this.state = data.states.idle ?? Object.values(data.states)[0];
     this.frameIndex = 0;
     this.timeInFrame = 0;
     this.finished = false;
+  }
+
+  /** Associa a atlas (Image) de um estado específico (artes por estado). */
+  setImage(stateName, image) {
+    this.stateImages.set(stateName, image);
+  }
+
+  /** Há arte real carregada para este animador? */
+  hasRealArt() {
+    return this.stateImages.size > 0;
+  }
+
+  /** Imagem da atlas do estado atual (ou o fallback único). */
+  getImage() {
+    return this.stateImages.get(this.stateName) ?? this.atlas;
   }
 
   /**
@@ -69,15 +85,24 @@ export class SpriteAnimator {
     return this.frameIndex >= activeFrom && this.frameIndex <= (activeTo ?? activeFrom);
   }
 
-  /** Retângulo-fonte da célula atual na atlas. */
+  /** Retângulo-fonte da célula atual na atlas.
+   *
+   * Cada estado pode ter sua própria atlas (image/columns/frameWidth no
+   * estado). A posição é calculada pelo índice linear (row * columns + col)
+   * somado ao frame atual, envolvendo para a linha seguinte se necessário.
+   */
   getFrameRect() {
-    const { frameWidth, frameHeight, pivotX } = this.meta;
+    const s = this.state;
+    const fw = s.frameWidth ?? this.meta.frameWidth;
+    const fh = s.frameHeight ?? this.meta.frameHeight;
+    const cols = s.columns ?? this.meta.columns ?? 19;
+    const cell = s.row * cols + s.col + this.frameIndex;
     return {
-      sx: (this.state.col + this.frameIndex) * frameWidth,
-      sy: this.state.row * frameHeight,
-      sw: frameWidth,
-      sh: frameHeight,
-      pivotX,
+      sx: (cell % cols) * fw,
+      sy: Math.floor(cell / cols) * fh,
+      sw: fw,
+      sh: fh,
+      pivotX: s.pivotX ?? this.meta.pivotX,
     };
   }
 
@@ -91,10 +116,12 @@ export class SpriteAnimator {
    */
   draw(ctx, x, groundY, face = 1, scale = 1) {
     const { sx, sy, sw, sh, pivotX } = this.getFrameRect();
+    const image = this.getImage();
+    if (!image) return;
     ctx.save();
     ctx.translate(x, groundY);
     ctx.scale(face * scale, scale);
-    ctx.drawImage(this.atlas, sx, sy, sw, sh, -pivotX, -sh, sw, sh);
+    ctx.drawImage(image, sx, sy, sw, sh, -pivotX, -sh, sw, sh);
     ctx.restore();
   }
 }

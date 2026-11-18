@@ -1,0 +1,20 @@
+﻿{
+    "meta":  {
+                 "frameHeight":  320,
+                 "columns":  11,
+                 "pivotX":  160,
+                 "frameWidth":  320,
+                 "image":  "crouch.png",
+                 "pivotY":  320,
+                 "rows":  1
+             },
+    "states":  {
+                   "crouch":  {
+                                  "row":  0,
+                                  "loop":  true,
+                                  "frames":  11,
+                                  "col":  0,
+                                  "fps":  10
+                              }
+               }
+}

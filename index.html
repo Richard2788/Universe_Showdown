@@ -15,9 +15,9 @@
       </header>
       <section class="game-panel" aria-label="Arena de combate">
         <div class="match-hud">
-          <div class="fighter-info player-info"><span>PLAYER 01</span><strong id="player-health-label">100</strong><div class="health-track"><i id="player-health"></i></div></div>
+          <div class="fighter-info player-info"><span id="player-label">PLAYER 01</span><strong id="player-health-label">100</strong><div class="health-track"><i id="player-health"></i></div></div>
           <div class="round-info"><span>ROUND</span><strong>01</strong><small id="status">READY</small></div>
-          <div class="fighter-info enemy-info"><span>CPU</span><strong id="enemy-health-label">100</strong><div class="health-track"><i id="enemy-health"></i></div></div>
+          <div class="fighter-info enemy-info"><span id="enemy-label">CPU</span><strong id="enemy-health-label">100</strong><div class="health-track"><i id="enemy-health"></i></div></div>
         </div>
         <div class="arena-wrap">
           <canvas id="arena" aria-label="Arena 2D. Use os controles na tela para mover e atacar." tabindex="0"></canvas>
@@ -38,7 +38,22 @@
           </div>
         </div>
       </section>
-      <footer class="footer"><span>TOUCHSCREEN MULTI-TOUCH ENABLED</span><button id="reset" type="button">REINICIAR TESTE ↻</button><span>DESKTOP: A / D · W · S · J K L U</span></footer>
+      <footer class="footer"><span>TOUCHSCREEN MULTI-TOUCH ENABLED</span><span class="footer-actions"><button id="menu" type="button">MENU ⌂</button><button id="reset" type="button">REINICIAR TESTE ↻</button></span><span>DESKTOP: A / D · W · S · ESPAÇO · J K L U · SEGURE O RECUE P/ DEFENDER · 1/2/3 DIFICULDADE · M MENU</span></footer>
+      <div class="menu-overlay is-open" id="menu-overlay" aria-label="Menu de início">
+        <div class="menu-card">
+          <span class="menu-kicker">PROTÓTIPO 01 · IA DA CPU</span>
+          <h2>UNIVERSE SHOWDOWN</h2>
+          <p class="menu-sub">Escolha a dificuldade da CPU</p>
+          <div class="menu-diffs" id="menu-diffs" role="group" aria-label="Dificuldade da CPU">
+            <button type="button" data-diff="facil" class="is-selected">FÁCIL</button>
+            <button type="button" data-diff="medio">MÉDIO</button>
+            <button type="button" data-diff="dificil">DIFÍCIL</button>
+          </div>
+          <p class="menu-hint">CADA DIFICULDADE LIBERA MAIS GOLPES E REFLEXOS MAIS RÁPIDOS</p>
+          <button type="button" class="menu-start primary" id="start-pvc">JOGAR · PLAYER vs CPU</button>
+          <button type="button" class="menu-start" id="start-cvc">ASSISTIR · CPU vs CPU</button>
+        </div>
+      </div>
     </main>
     <script type="module" src="/src/main.js"></script>
   </body>

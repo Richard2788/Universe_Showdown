@@ -1,0 +1,20 @@
+﻿{
+    "meta":  {
+                 "frameHeight":  192,
+                 "columns":  3,
+                 "pivotX":  96,
+                 "frameWidth":  192,
+                 "image":  "hit.png",
+                 "pivotY":  192,
+                 "rows":  1
+             },
+    "states":  {
+                   "hit":  {
+                               "row":  0,
+                               "loop":  false,
+                               "frames":  3,
+                               "col":  0,
+                               "fps":  12
+                           }
+               }
+}

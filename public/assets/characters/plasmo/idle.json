@@ -1,0 +1,20 @@
+﻿{
+    "meta":  {
+                 "frameHeight":  320,
+                 "columns":  12,
+                 "pivotX":  160,
+                 "frameWidth":  320,
+                 "image":  "idle.png",
+                 "pivotY":  320,
+                 "rows":  1
+             },
+    "states":  {
+                   "idle":  {
+                                "row":  0,
+                                "loop":  true,
+                                "frames":  12,
+                                "col":  0,
+                                "fps":  8
+                            }
+               }
+}
