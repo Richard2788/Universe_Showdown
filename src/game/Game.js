@@ -5,45 +5,38 @@ import { ANIMATION_DATA } from '../characters/animations.js';
 import { buildPlaceholderAtlas } from '../characters/PlaceholderAtlas.js';
 import { PLASMO_DATA } from '../characters/Plasmo.js';
 import { CPUController, DIFFICULTIES } from '../ai/CPUController.js';
-
-const WIDTH = 960;
-const HEIGHT = 540;
-const STEP = 1 / 60;
+import { InputManager } from '../core/InputManager.js';
+import { GameLoop } from '../core/GameLoop.js';
+import { HUD } from '../ui/HUD.js';
+import {
+  WIDTH, HEIGHT, STEP, MAX_FRAME_DELTA, STAGE_MARGIN,
+  PLAYER_SPAWN_X, ENEMY_SPAWN_X, isDebugEnabled,
+} from '../config/game.js';
+import { separateBodies, updateFaces } from './physics.js';
 
 export class Game {
   constructor(canvas) {
     this.canvas = canvas;
     this.ctx = canvas.getContext('2d');
     this.renderer = new CanvasRenderer(this.ctx, WIDTH, HEIGHT);
-    this.input = {
-      actions: Object.create(null),
-      sources: new Map(),
-      set: (action, value, source = 'default') => {
-        if (!this.input.sources.has(action)) this.input.sources.set(action, new Set());
-        const active = this.input.sources.get(action);
-        if (value) active.add(source); else active.delete(source);
-        this.input.actions[action] = active.size > 0;
-      },
-      clear: () => { this.input.actions = Object.create(null); this.input.sources.clear(); },
-    };
-    this.player = new Fighter(300, '#51e3e8', 1, {
+    this.hud = new HUD();
+    this.input = new InputManager();
+    this.player = new Fighter(PLAYER_SPAWN_X, '#51e3e8', 1, {
       // Plasmo: conteúdo normalizado a ~96px (metade do mais alto); escala
       // total 1.1 × 1 ≈ mesmo tamanho do placeholder (~105 px).
       renderScale: 1,
       hurtboxHalfWidth: 48,
       hurtboxHeight: 100,
     });
-    this.enemy = new Fighter(660, '#ff638c', -1);
+    this.enemy = new Fighter(ENEMY_SPAWN_X, '#ff638c', -1);
     this.setupAnimators();
-    this.lastTime = 0;
-    this.accumulator = 0;
     this.frame = 0;
     this.resizeObserver = new ResizeObserver(() => this.resize());
     this.resizeObserver.observe(canvas);
     this.resize();
     // Modo debug: ?debug=1 exibe hitboxes, posição e estado dos lutadores.
     const params = new URLSearchParams(window.location.search);
-    this.debug = params.has('debug');
+    this.debug = isDebugEnabled();
     this.renderer.debug = this.debug;
     // ── IA da CPU ──
     // ?diff=facil|medio|dificil pré-seleciona a dificuldade (padrão: fácil).
@@ -51,10 +44,18 @@ export class Game {
     const diff = params.get('diff');
     this.difficulty = DIFFICULTIES[diff] ? diff : 'facil';
     this.mode = 'menu';
+    this.previousMode = null;
     this.cpuPlayer = new CPUController(this.player, this.enemy, this.difficulty);
     this.cpuEnemy = new CPUController(this.enemy, this.player, this.difficulty);
     this.renderer.cpuStates.set(this.player, null);
     this.renderer.cpuStates.set(this.enemy, null);
+    // Loop com timestep fixo: a simulação não depende da taxa de render.
+    this.gameLoop = new GameLoop({
+      update: (dt) => this.update(dt),
+      render: () => this.render(),
+      step: STEP,
+      maxDelta: MAX_FRAME_DELTA,
+    });
   }
   /**
    * Cria um SpriteAnimator por lutador usando a atlas placeholder.
@@ -91,24 +92,7 @@ export class Game {
     this.offsetX = (this.canvas.width - WIDTH * this.scale) / 2;
     this.offsetY = (this.canvas.height - HEIGHT * this.scale) / 2;
   }
-  start() { requestAnimationFrame((time) => this.loop(time)); }
-  loop(time) {
-    // try/catch garante que o rAF continue agendado: uma exceção de update
-    // ou render não mata o jogo silenciosamente (tela preta).
-    try {
-      const delta = Math.min((time - (this.lastTime || time)) / 1000, 0.1);
-      this.lastTime = time;
-      this.accumulator += delta;
-      while (this.accumulator >= STEP) {
-        this.update(STEP);
-        this.accumulator -= STEP;
-      }
-      this.render();
-    } catch (error) {
-      console.error('[Universe Showdown] erro no loop:', error);
-    }
-    requestAnimationFrame((next) => this.loop(next));
-  }
+  start() { this.gameLoop.start(); }
   update(dt) {
     if (this.mode === 'menu') return; // congelado atrás do menu de início
     this.frame++;
@@ -135,20 +119,11 @@ export class Game {
     // Estado interno da IA (mostrado no ?debug=1).
     this.renderer.cpuStates.set(this.player, this.mode === 'cvc' ? this.cpuPlayer.stateName : null);
     this.renderer.cpuStates.set(this.enemy, this.mode === 'pvc' ? this.cpuEnemy.stateName : null);
-    // Separação física = soma das meia-larguras das hurtbox de cada
-    // personagem: os corpos encostam, mas não impedem o alcance dos golpes.
-    const distance = this.enemy.x - this.player.x;
-    const minDistance = this.player.hurtbox.halfWidth + this.enemy.hurtbox.halfWidth;
-    if (Math.abs(distance) < minDistance) {
-      const overlap = minDistance - Math.abs(distance);
-      const direction = Math.sign(distance) || 1;
-      this.player.x -= overlap * direction * 0.5;
-      this.enemy.x += overlap * direction * 0.5;
-    }
-    this.player.x = Math.max(55, Math.min(WIDTH - 55, this.player.x));
-    this.enemy.x = Math.max(55, Math.min(WIDTH - 55, this.enemy.x));
-    this.player.face = this.enemy.x >= this.player.x ? 1 : -1;
-    this.enemy.face = -this.player.face;
+    // Separação de corpos e virada de face (lógica pura em ./physics.js).
+    separateBodies(this.player, this.enemy);
+    this.player.x = Math.max(STAGE_MARGIN, Math.min(WIDTH - STAGE_MARGIN, this.player.x));
+    this.enemy.x = Math.max(STAGE_MARGIN, Math.min(WIDTH - STAGE_MARGIN, this.enemy.x));
+    updateFaces(this.player, this.enemy);
     this.player.health = Math.max(0, this.player.health);
     this.enemy.health = Math.max(0, this.enemy.health);
   }
@@ -157,11 +132,7 @@ export class Game {
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     this.ctx.setTransform(this.scale, 0, 0, this.scale, this.offsetX, this.offsetY);
     this.renderer.draw(this.player, this.enemy, this.frame);
-    document.querySelector('#player-health').style.width = this.player.health + '%';
-    document.querySelector('#enemy-health').style.width = this.enemy.health + '%';
-    document.querySelector('#player-health-label').textContent = Math.ceil(this.player.health);
-    document.querySelector('#enemy-health-label').textContent = Math.ceil(this.enemy.health);
-    document.querySelector('#status').textContent = this.player.health <= 0 || this.enemy.health <= 0 ? 'ROUND END' : 'READY';
+    this.hud.sync(this.player, this.enemy);
   }
   /** Inicia o round no modo escolhido ('pvc' = jogador vs CPU, 'cvc' = CPU vs CPU). */
   startMatch(mode) {
@@ -173,15 +144,19 @@ export class Game {
     const label = DIFFICULTIES[this.difficulty].label;
     this.renderer.playerLabel = mode === 'cvc' ? 'CPU 01' : 'YOU';
     this.renderer.enemyLabel = mode === 'cvc' ? 'CPU 02' : 'CPU';
-    const playerInfo = document.querySelector('#player-label');
-    const enemyInfo = document.querySelector('#enemy-label');
-    if (playerInfo) playerInfo.textContent = mode === 'cvc' ? `CPU 01 · ${label}` : 'PLAYER 01';
-    if (enemyInfo) enemyInfo.textContent = mode === 'cvc' ? `CPU 02 · ${label}` : `CPU · ${label}`;
+    this.hud.setMatchLabels(mode, label);
   }
 
   /** Volta ao menu de início (congela a simulação; o render continua). */
   openMenu() {
+    if (this.previousMode === null) this.previousMode = this.mode;
     this.mode = 'menu';
+  }
+
+  /** Fecha o menu e retorna ao modo anterior (pvc / cvc). */
+  closeMenu() {
+    this.mode = this.previousMode || 'pvc';
+    this.previousMode = null;
   }
 
   /** Troca a dificuldade da CPU em tempo real (atalhos 1/2/3 e menu). */
@@ -192,11 +167,7 @@ export class Game {
     this.cpuEnemy.setDifficulty(name);
     if (this.mode !== 'menu') {
       // Atualiza o rótulo do HUD sem interromper o round.
-      const label = DIFFICULTIES[name].label;
-      const enemyInfo = document.querySelector('#enemy-label');
-      const playerInfo = document.querySelector('#player-label');
-      if (enemyInfo) enemyInfo.textContent = this.mode === 'cvc' ? `CPU 02 · ${label}` : `CPU · ${label}`;
-      if (playerInfo && this.mode === 'cvc') playerInfo.textContent = `CPU 01 · ${label}`;
+      this.hud.setDifficultyLabel(this.mode, DIFFICULTIES[name].label);
     }
   }
 
@@ -204,7 +175,7 @@ export class Game {
     // Reutiliza os lutadores existentes: evita acúmulo de entradas órfãs
     // no Map `animators` do CanvasRenderer e mantém os animadores válidos.
     for (const [fighter, animator] of this.fighterAnimators) {
-      fighter.x = fighter === this.player ? 300 : 660;
+      fighter.x = fighter === this.player ? PLAYER_SPAWN_X : ENEMY_SPAWN_X;
       fighter.y = 0; fighter.vy = 0;
       fighter.face = fighter === this.player ? 1 : -1;
       fighter.health = 100;

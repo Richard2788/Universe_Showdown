@@ -36,14 +36,6 @@ export class CanvasRenderer {
     c.strokeStyle = '#53647c'; c.globalAlpha = .6; c.beginPath(); c.moveTo(0, 420); c.lineTo(w, 420); c.stroke(); c.globalAlpha = 1;
     this.drawScenery();
     for (const [fighter, label] of [[player, this.playerLabel], [enemy, this.enemyLabel]]) this.drawFighter(fighter, label);
-    c.fillStyle = '#9aabc4'; c.font = '12px ui-monospace,monospace'; c.fillText('UNIVERSE // TRAINING SIMULATION', 24, 32);
-    c.fillStyle = '#51e3e8'; c.fillRect(24, 48, 3, 18);
-    c.fillStyle = '#d6e1f3'; c.font = 'bold 12px ui-monospace,monospace'; c.fillText('MOVE  •  JUMP  •  STRIKE', 36, 61);
-    if (this.usesPlaceholder) {
-      c.fillStyle = '#8290ad'; c.font = 'bold 10px ui-monospace,monospace'; c.textAlign = 'right';
-      c.fillText('PLACEHOLDER SPRITES', w - 16, 30);
-      c.textAlign = 'left';
-    }
   }
 
   /**

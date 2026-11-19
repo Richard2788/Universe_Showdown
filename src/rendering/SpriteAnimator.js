@@ -90,6 +90,10 @@ export class SpriteAnimator {
    * Cada estado pode ter sua própria atlas (image/columns/frameWidth no
    * estado). A posição é calculada pelo índice linear (row * columns + col)
    * somado ao frame atual, envolvendo para a linha seguinte se necessário.
+   *
+   * `anchorX` = pivô horizontal do desenho. Prioridade: âncora POR FRAME
+   * (`frameAnchors`) → âncora do estado → `pivotX` (centro da célula).
+   * Usar a âncora do corpo evita o salto lateral ao espelhar a sprite.
    */
   getFrameRect() {
     const s = this.state;
@@ -97,17 +101,25 @@ export class SpriteAnimator {
     const fh = s.frameHeight ?? this.meta.frameHeight;
     const cols = s.columns ?? this.meta.columns ?? 19;
     const cell = s.row * cols + s.col + this.frameIndex;
+    const pivotX = s.pivotX ?? this.meta.pivotX;
+    const anchorX = s.frameAnchors?.[this.frameIndex] ?? s.anchorX ?? pivotX;
     return {
       sx: (cell % cols) * fw,
       sy: Math.floor(cell / cols) * fh,
       sw: fw,
       sh: fh,
-      pivotX: s.pivotX ?? this.meta.pivotX,
+      pivotX,
+      anchorX,
     };
   }
 
   /**
-   * Desenha o frame atual ancorado no pivô (base entre os pés).
+   * Desenha o frame ancorado no pivô `anchorX` (corpo no eixo de `x`).
+   *
+   * O espelhamento (`scale(face, 1)`) gira em torno de `anchorX`, não do
+   * centro da célula: o corpo permanece na mesma posição na tela ao trocar
+   * de face — só braços e pernas trocam de lado.
+   *
    * @param {CanvasRenderingContext2D} ctx
    * @param {number} x      posição horizontal do lutador (mundo)
    * @param {number} groundY linha do chão
@@ -115,13 +127,13 @@ export class SpriteAnimator {
    * @param {number} [scale] escala de exibição
    */
   draw(ctx, x, groundY, face = 1, scale = 1) {
-    const { sx, sy, sw, sh, pivotX } = this.getFrameRect();
+    const { sx, sy, sw, sh, anchorX } = this.getFrameRect();
     const image = this.getImage();
     if (!image) return;
     ctx.save();
     ctx.translate(x, groundY);
     ctx.scale(face * scale, scale);
-    ctx.drawImage(image, sx, sy, sw, sh, -pivotX, -sh, sw, sh);
+    ctx.drawImage(image, sx, sy, sw, sh, -anchorX, -sh, sw, sh);
     ctx.restore();
   }
 }

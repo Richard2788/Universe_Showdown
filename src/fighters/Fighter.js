@@ -1,3 +1,5 @@
+import { WALK_SPEED, RUN_SPEED } from '../config/game.js';
+
 export const ATTACKS = {
   // reach = comprimento da hitbox do golpe, medido do CENTRO do lutador,
   // alinhado à extensão real do membro na arte (a mão do golpe fraco chega
@@ -52,6 +54,7 @@ export class Fighter {
     this.blockFx = 0;      // efeito visual de impacto do bloqueio (decai)
     this.blockFxSide = 1;  // lado do defensor onde o golpe foi bloqueado (+1/-1)
     this.kbVx = 0;         // knockback: velocidade de arremesso (px/s, decai)
+    this.running = false;  // correndo neste frame (só para frente; animação 'run')
     this.prev = {};        // ações do frame anterior (debounce honesto)
     // Cada personagem tem tamanho e hurtbox próprios (Plasmo é 4× maior).
     this.renderScale = options.renderScale ?? 1;
@@ -67,6 +70,7 @@ export class Fighter {
     if (this.y > 0 || this.landingTimer > 0) return 'jump';
     if (this.blockTimer > 0 || this.blocking) return 'block';
     if (this.crouch) return 'crouch';
+    if (this.running) return 'run';
     return this.walking ? 'walk' : 'idle'; // andar é detectado pelo input
   }
   update(dt, actions, opponent) {
@@ -74,6 +78,7 @@ export class Fighter {
     this.blockTimer = Math.max(0, this.blockTimer - dt);
     this.blockFx = Math.max(0, this.blockFx - dt);
     const prev = this.prev; // ações do frame anterior → borda de subida
+    this.running = false;   // recalculado no ramo de movimento; falso ao atacar
     if (this.attack) {
       this.attack.elapsed += dt;
       const { activeStart, activeEnd, reach, damage, maxTargetY, height, blockstun, chip, knockback } = this.attack.data;
@@ -112,7 +117,6 @@ export class Fighter {
       }
       if (this.attack.elapsed >= this.attack.data.duration) this.attack = null;
     } else {
-      const speed = 250;
       // Recuperação de aterrissagem: sem input até a animação do pulo acabar
       // (frames de splat → poça → reforma rodam em solo).
       const grounded = this.landingTimer <= 0;
@@ -120,6 +124,16 @@ export class Fighter {
       // Postura antes do movimento: agachado NÃO anda (defesa agachada fica
       // parada no lugar, como nos clássicos — só a defesa em pé recua).
       this.crouch = grounded && !stunned && Boolean(actions.crouch);
+      // Corrida: só para frente (na direção do oponente, `this.face`), fora
+      // de agachar, blockstun e hitstun. No ar a velocidade é mantida (pulo
+      // corrido) mas `running` fica false — a animação em solo é 'jump'.
+      const moving = actions.left !== actions.right;
+      const dir = actions.right ? 1 : actions.left ? -1 : 0;
+      const forward = moving && dir === this.face;
+      const canRun = grounded && !stunned && this.hitTimer <= 0
+        && !this.crouch && Boolean(actions.run) && forward;
+      this.running = canRun && this.y === 0;
+      const speed = canRun ? RUN_SPEED : WALK_SPEED;
       if (grounded && !stunned && !this.crouch && actions.left) this.x -= speed * dt;
       if (grounded && !stunned && !this.crouch && actions.right) this.x += speed * dt;
       // Pulo: dispara na BORDA DE SUBIDA (pressionou agora) — segurar não
@@ -130,7 +144,7 @@ export class Fighter {
         this.vy = 560;
         this.jumpBuffer = 0;
       }
-      this.walking = grounded && !stunned && Boolean(actions.left || actions.right) && !this.crouch;
+      this.walking = grounded && !stunned && moving && !this.crouch;
       if (grounded && !stunned) {
         // Ataques: também só na borda de subida (debounce honesto — vale
         // igual para teclado, touch e CPU, que emite `true` por 1 frame).

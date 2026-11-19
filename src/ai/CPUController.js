@@ -25,6 +25,7 @@ export const DIFFICULTIES = {
     blockChance: 0.08,       // chance de bloquear (segurar o recuo) ao reagir
     pauseChance: 0.35,       // chance de pausar (fica parado) ao decidir
     jumpChance: 0.05,        // chance de pular para fechar distância
+    runDistance: 300,        // acima disso, corre para aproximar (raro)
     punish: false,           // pune hitstun/recuperação do oponente?
     allowedAttacks: ['lightAttack', 'kick'],
     weights: { lightAttack: 3, kick: 1 },
@@ -38,6 +39,7 @@ export const DIFFICULTIES = {
     blockChance: 0.25,
     pauseChance: 0.2,
     jumpChance: 0.08,
+    runDistance: 220,
     punish: false,
     allowedAttacks: ['lightAttack', 'mediumAttack', 'kick'],
     weights: { lightAttack: 3, mediumAttack: 2, kick: 1.5 },
@@ -51,6 +53,7 @@ export const DIFFICULTIES = {
     blockChance: 0.5,
     pauseChance: 0.08,
     jumpChance: 0.12,
+    runDistance: 170,
     punish: true,
     allowedAttacks: ['lightAttack', 'mediumAttack', 'heavyAttack', 'kick'],
     weights: { lightAttack: 3, mediumAttack: 2, heavyAttack: 1.2, kick: 1.5 },
@@ -78,6 +81,7 @@ export class CPUController {
     // frames (zerado no início de cada update).
     this.actions = {
       left: false, right: false, crouch: false, jump: false,
+      run: false,
       lightAttack: false, mediumAttack: false, heavyAttack: false, kick: false,
     };
     this.setDifficulty(difficulty);
@@ -228,6 +232,8 @@ export class CPUController {
       case 'approach':
         if (dist > this.rangeOf('lightAttack')) {
           if (dir > 0) a.right = true; else a.left = true;
+          // Longe o bastante, corre para encurtar a distância.
+          a.run = dist > (p.runDistance ?? 220);
         }
         break;
       case 'retreat':

@@ -1,9 +1,82 @@
-:root{font-family:Inter,ui-sans-serif,system-ui,sans-serif;color:#f4f6ff;background:#090d18;font-synthesis:none;text-rendering:optimizeLegibility;--muted:#8b96b2;--cyan:#51e3e8;--pink:#ff638c}*{box-sizing:border-box}html,body{margin:0;min-width:320px;min-height:100%;background:radial-gradient(ellipse at 50% 0%,#17243b 0,#090d18 58%);overscroll-behavior:none}body{min-height:100vh;min-height:100dvh}.app-shell{min-height:100vh;min-height:100dvh;max-width:1200px;margin:auto;padding:env(safe-area-inset-top) max(16px,env(safe-area-inset-right)) env(safe-area-inset-bottom) max(16px,env(safe-area-inset-left));display:flex;flex-direction:column;gap:16px}.topbar,.footer{display:flex;align-items:center;justify-content:space-between;gap:12px}.topbar{height:58px;flex:none}.brand{display:flex;align-items:center;gap:10px;color:#fff;text-decoration:none;font-size:12px;letter-spacing:.16em;font-weight:800}.brand b{color:var(--cyan)}.brand-mark{display:grid;place-items:center;width:34px;height:34px;border:1px solid var(--cyan);color:var(--cyan);font-size:20px;transform:skew(-8deg)}.build-tag,.footer{font-size:9px;letter-spacing:.15em;color:var(--muted)}.build-tag{border:1px solid #29344c;border-radius:99px;padding:7px 10px}.game-panel{flex:1;min-height:0;border:1px solid #27334c;border-radius:18px;overflow:hidden;background:#10182a;box-shadow:0 24px 80px #0007;display:flex;flex-direction:column}.match-hud{display:grid;grid-template-columns:1fr 70px 1fr;align-items:center;gap:12px;padding:14px 16px;background:#111a2d;border-bottom:1px solid #27334c}.fighter-info{display:grid;grid-template-columns:1fr auto;gap:5px 10px;font-size:10px;letter-spacing:.12em;color:var(--muted)}.fighter-info strong{color:#fff;font-size:17px}.health-track{grid-column:1/-1;height:8px;background:#28334a;border-radius:8px;overflow:hidden}.health-track i{display:block;height:100%;width:100%;background:linear-gradient(90deg,#36d8d1,#86f1d2);transition:width .15s}.enemy-info{text-align:right}.enemy-info .health-track i{margin-left:auto;background:linear-gradient(90deg,#ff9a83,#ff547e)}.round-info{text-align:center;display:grid;gap:2px}.round-info span,.round-info small{font-size:8px;letter-spacing:.13em;color:var(--muted)}.round-info strong{font-size:21px}.round-info small{color:var(--cyan)}.arena-wrap{position:relative;flex:1;min-height:190px;background:#111c30;overflow:hidden}canvas{display:block;width:100%;height:100%;touch-action:none}.arena-caption{position:absolute;bottom:10px;left:14px;right:14px;display:flex;justify-content:space-between;color:#8290ad;font-size:8px;letter-spacing:.14em;pointer-events:none}.portrait-hint{display:none;position:absolute;inset:0;background:#09101deF;z-index:2;align-items:center;justify-content:center;flex-direction:column;gap:8px;text-align:center}.portrait-hint span{font-size:38px;color:var(--cyan)}.portrait-hint b{font-size:12px;letter-spacing:.16em}.portrait-hint small{color:var(--muted);font-size:11px}.touch-controls{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:12px 16px max(14px,env(safe-area-inset-bottom));background:#0d1424;border-top:1px solid #27334c;touch-action:none;user-select:none;-webkit-user-select:none}.movement-pad,.attack-pad{display:flex;align-items:center;gap:8px}.movement-extra{display:flex;flex-direction:column;gap:6px;margin-left:4px}.control{border:1px solid #3a4967;color:#fff;background:#1b2941;min-width:48px;min-height:48px;border-radius:13px;font-weight:800;font-size:12px;touch-action:none;user-select:none;-webkit-user-select:none;box-shadow:inset 0 1px #ffffff12}.control:active,.control.is-pressed{transform:translateY(1px);background:#2b4561;border-color:var(--cyan);box-shadow:0 0 18px #51e3e844}.move{font-size:18px;color:var(--cyan);min-width:52px}.utility{font-size:8px;min-height:25px;min-width:55px;padding:4px;color:#b7c3dc}.attack{min-width:54px;height:54px;border-radius:50%;font-size:9px;letter-spacing:.03em}.light{border-color:#51e3e8;color:#51e3e8}.medium{border-color:#8d8aff;color:#aaa7ff}.heavy{border-color:#ff9a63;color:#ffb17e}.kick{border-color:#ff638c;color:#ff8eaa}.footer{padding:0 2px 8px}.footer button{border:0;background:none;color:var(--cyan);font:inherit;letter-spacing:inherit;cursor:pointer}@media(min-width:760px){.app-shell{padding-top:20px;padding-bottom:16px}.topbar{height:54px}.game-panel{min-height:620px}.touch-controls{display:none}.arena-wrap{min-height:0}.footer{padding:4px 2px}}@media(max-width:560px){.app-shell{gap:10px;padding-left:max(8px,env(safe-area-inset-left));padding-right:max(8px,env(safe-area-inset-right))}.topbar{height:44px;padding:0 4px}.game-panel{border-radius:13px}.match-hud{padding:10px;gap:8px}.touch-controls{padding:10px 8px max(12px,env(safe-area-inset-bottom));gap:5px}.movement-pad,.attack-pad{gap:5px}.move{min-width:44px;min-height:48px}.attack{min-width:clamp(43px,12vw,52px);height:clamp(43px,12vw,52px);font-size:8px}.utility{min-width:48px}.footer{font-size:7px;letter-spacing:.07em}.footer span:last-child{display:none}}@media(orientation:portrait) and (max-width:760px){.portrait-hint{display:flex}}
+:root{font-family:Inter,ui-sans-serif,system-ui,sans-serif;color:#f4f6ff;background:#090d18;font-synthesis:none;text-rendering:optimizeLegibility;--muted:#8b96b2;--cyan:#51e3e8;--pink:#ff638c;--safe-top:max(6px,env(safe-area-inset-top));--safe-right:max(8px,env(safe-area-inset-right));--safe-bottom:max(8px,env(safe-area-inset-bottom));--safe-left:max(8px,env(safe-area-inset-left))}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;overscroll-behavior:none;-webkit-text-size-adjust:100%;text-size-adjust:100%}
+body{min-height:100vh;min-height:100dvh;background:radial-gradient(ellipse at 50% 0%,#17243b 0,#090d18 58%);color:#f4f6ff;font-family:inherit;font-synthesis:none;text-rendering:optimizeLegibility}
+.app-shell{min-height:0;height:100%;max-width:none;padding:0;gap:0;display:flex;flex-direction:column;overflow:hidden;position:relative}
+.topbar,.match-hud,.touch-controls,.footer{flex:0 0 auto}
 
-/* -- Menu de in�cio: dificuldade da CPU e modo de jogo -- */
-.menu-overlay{position:fixed;inset:0;z-index:60;display:none;align-items:center;justify-content:center;padding:16px;background:radial-gradient(ellipse at 50% 30%,rgba(23,36,59,.92),rgba(9,13,24,.97));backdrop-filter:blur(5px)}
-.menu-overlay.is-open{display:flex}
-.menu-card{width:min(420px,94vw);border:1px solid #27334c;border-radius:18px;background:#10182a;box-shadow:0 24px 80px #000a;padding:26px 24px;display:flex;flex-direction:column;gap:14px;text-align:center}
+/* ── Arena (canvas) ocupa toda a tela do game-panel ── */
+.game-panel{flex:1;min-height:0;border:1px solid #27334c;border-radius:18px;overflow:hidden;background:#10182a;box-shadow:0 24px 80px #0007;display:flex;flex-direction:column;position:relative}
+.arena-wrap{position:absolute;inset:0;z-index:0;min-height:0}
+canvas{display:block;width:100%;height:100%;touch-action:none}
+
+/* ── HUD sobreposto no topo ── */
+.match-hud{position:absolute;top:0;left:0;right:0;z-index:5;background:linear-gradient(to bottom,rgba(9,13,24,.88),rgba(9,13,24,.35) 70%,transparent);border-bottom:none;pointer-events:none;padding-top:max(6px,env(safe-area-inset-top));padding-inline:max(8px,env(safe-area-inset-left)) max(8px,env(safe-area-inset-right))}
+.match-hud>*{pointer-events:auto}
+
+/* ── Controles sobrepostos embaixo ── */
+.touch-controls{position:absolute;left:0;right:0;bottom:0;z-index:6;background:linear-gradient(to top,rgba(13,20,36,.62),transparent);border-top:none;pointer-events:none;padding-bottom:max(8px,env(safe-area-inset-bottom));padding-inline:max(8px,env(safe-area-inset-left)) max(8px,env(safe-area-inset-right));display:flex;justify-content:space-between;align-items:flex-end}
+.touch-controls .control{pointer-events:auto}
+.touch-controls.is-hidden{display:none}
+
+/* ── Footer: só os botões no mobile ── */
+.footer{position:absolute;z-index:7;padding:0}
+.footer > span:not(.footer-actions){display:none}
+.footer-actions{display:flex;gap:8px}
+.footer-actions .fs-icon{font-size:14px}
+.footer-actions .fs-label{display:none}
+.footer button{border:0;background:none;color:var(--cyan);font:inherit;letter-spacing:inherit;cursor:pointer}
+.control.utility{min-height:28px;min-width:66px;font-size:8px;padding:3px 6px;color:#b7c3dc}
+
+/* ── Topbar (somente desktop) ── */
+.topbar,.footer{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.topbar{height:58px;flex:none;display:none}
+.brand{display:flex;align-items:center;gap:10px;color:#fff;text-decoration:none;font-size:12px;letter-spacing:.16em;font-weight:800}
+.brand b{color:var(--cyan)}
+.brand-mark{display:grid;place-items:center;width:34px;height:34px;border:1px solid var(--cyan);color:var(--cyan);font-size:20px;transform:skew(-8deg)}
+.build-tag,.footer{font-size:9px;letter-spacing:.15em;color:var(--muted)}
+.build-tag{border:1px solid #29344c;border-radius:99px;padding:7px 10px}
+
+/* ── Conteúdo do HUD ── */
+.match-hud{display:grid;grid-template-columns:1fr 70px 1fr;align-items:center;gap:12px;padding:14px 16px;background:#111a2d;border-bottom:1px solid #27334c}
+.fighter-info{display:grid;grid-template-columns:1fr auto;gap:5px 10px;font-size:10px;letter-spacing:.12em;color:var(--muted)}
+.fighter-info strong{color:#fff;font-size:17px}
+.health-track{grid-column:1/-1;height:8px;background:#28334a;border-radius:8px;overflow:hidden}
+.health-track i{display:block;height:100%;width:100%;background:linear-gradient(90deg,#36d8d1,#86f1d2);transition:width .15s}
+.enemy-info{text-align:right}
+.enemy-info .health-track i{margin-left:auto;background:linear-gradient(90deg,#ff9a83,#ff547e)}
+.round-info{text-align:center;display:grid;gap:2px}
+.round-info span,.round-info small{font-size:8px;letter-spacing:.13em;color:var(--muted)}
+.round-info strong{font-size:21px}
+.round-info small{color:var(--cyan)}
+
+/* ── Conteúdo dos controles touch ── */
+.action-pad{display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+.utility-row{display:flex;gap:6px}
+.attack-pad{display:flex;align-items:center;gap:8px}
+.control{border:1px solid #3a4967;color:#fff;background:#1b2941;min-width:48px;min-height:48px;border-radius:13px;font-weight:800;font-size:12px;touch-action:none;user-select:none;-webkit-user-select:none;box-shadow:inset 0 1px #ffffff12}
+.control:active,.control.is-pressed{transform:translateY(1px);background:#2b4561;border-color:var(--cyan);box-shadow:0 0 18px #51e3e844}
+.move{font-size:18px;color:var(--cyan);min-width:52px}
+.utility{font-size:8px;min-height:25px;min-width:55px;padding:4px;color:#b7c3dc}
+.attack{min-width:54px;height:54px;border-radius:50%;font-size:9px;letter-spacing:.03em}
+.light{border-color:#51e3e8;color:#51e3e8}
+.medium{border-color:#8d8aff;color:#aaa7ff}
+.heavy{border-color:#ff9a63;color:#ffb17e}
+.kick{border-color:#ff638c;color:#ff8eaa}
+
+/* ── Cenário/legenda ── */
+.arena-caption{position:absolute;bottom:10px;left:14px;right:14px;display:flex;justify-content:space-between;color:#8290ad;font-size:8px;letter-spacing:.14em;pointer-events:none}
+
+/* ── Aviso retrato ── */
+.portrait-hint{display:none;position:absolute;inset:0;background:#09101deF;z-index:20;align-items:center;justify-content:center;flex-direction:column;gap:8px;text-align:center}
+.portrait-hint span{font-size:38px;color:var(--cyan)}
+.portrait-hint b{font-size:12px;letter-spacing:.16em}
+.portrait-hint small{color:var(--muted);font-size:11px}
+
+/* ── Menu ── */
+.menu-card{position:relative;width:min(420px,94vw);border:1px solid #27334c;border-radius:18px;background:#10182a;box-shadow:0 24px 80px #000a;padding:26px 24px;display:flex;flex-direction:column;gap:14px;text-align:center;max-height:calc(100dvh - 32px);overflow-y:auto}
+.menu-close{position:absolute;top:var(--safe-top);right:var(--safe-right);background:none;border:none;color:var(--muted);font-size:20px;line-height:1;cursor:pointer;padding:4px}
+.menu-close:hover{color:#fff}
 .menu-kicker{font-size:9px;letter-spacing:.2em;color:var(--muted)}
 .menu-card h2{margin:0;font-size:20px;letter-spacing:.1em}
 .menu-card h2::after{content:'';display:block;width:44px;height:2px;margin:10px auto 0;background:var(--cyan)}
@@ -16,5 +89,99 @@
 .menu-start:hover{filter:brightness(1.2)}
 .menu-start.primary{background:linear-gradient(90deg,var(--cyan),#86f1d2);color:#06231f;border-color:transparent}
 .menu-hint{margin:0;font-size:8px;letter-spacing:.14em;color:var(--muted)}
-.touch-controls.is-hidden{display:none}
-.footer-actions{display:flex;gap:8px}
+.menu-overlay{position:fixed;inset:0;z-index:60;display:none;align-items:center;justify-content:center;padding:16px;background:radial-gradient(ellipse at 50% 30%,rgba(23,36,59,.92),rgba(9,13,24,.97));backdrop-filter:blur(5px)}
+.menu-overlay.is-open{display:flex}
+
+/* ── Desktop de verdade (mouse + hover) ── */
+@media (hover: hover) and (pointer: fine) and (min-width: 760px){
+  .app-shell{padding-top:20px;padding-bottom:16px;gap:16px;position:relative}
+  .topbar{height:54px;display:flex}
+  .game-panel{min-height:700px;border-radius:18px;box-shadow:0 24px 80px #0007}
+  .match-hud{position:static;background:#111a2d;border-bottom:1px solid #27334c;pointer-events:auto}
+  .touch-controls{display:none}
+  .arena-wrap{position:relative}
+  .footer{position:static;display:flex}
+  .footer > span:first-child{display:none}
+  .footer-actions .fs-label{display:inline}
+  .footer-actions button svg{display:none}
+  .footer-actions button:not([data-fullscreen="true"]) .fs-enter{display:inline}
+  .footer-actions button[data-fullscreen="true"] .fs-exit{display:inline}
+  .portrait-hint{display:none}
+}
+
+/* ── Todo dispositivo touch (inclui celular deitado) ── */
+@media (pointer: coarse){
+  .app-shell{max-width:none;padding:0;gap:0}
+  .topbar{display:none}
+  .game-panel{border:none;border-radius:0;box-shadow:none}
+  .match-hud{position:absolute;top:0;left:0;right:0;z-index:5;background:linear-gradient(to bottom,rgba(9,13,24,.88),rgba(9,13,24,.35) 70%,transparent);border-bottom:none;pointer-events:none;padding-top:calc(var(--safe-top) + 44px);padding-inline:var(--safe-left) var(--safe-right)}
+  .touch-controls{position:absolute;left:0;right:0;bottom:0;z-index:6;background:linear-gradient(to top,rgba(13,20,36,.62),transparent);border-top:none;pointer-events:none;padding-bottom:var(--safe-bottom);padding-inline:var(--safe-left) var(--safe-right);display:flex;justify-content:space-between;align-items:flex-end;
+    --pad-btn:clamp(44px,min(11.5dvh,12vw),56px);
+    --pad-move:clamp(57px,min(15dvh,15.5vw),73px);
+    --pad-util-h:clamp(26px,min(7dvh,8vw),34px);
+    --pad-gap:clamp(6px,1.6dvh,10px)
+  }
+  .touch-controls .control{pointer-events:auto}
+  .touch-controls .control{min-width:var(--pad-btn);min-height:var(--pad-btn);font-size:clamp(9px,2.6dvh,12px)}
+  .touch-controls .move{min-width:var(--pad-move);min-height:var(--pad-move);font-size:clamp(18px,5dvh,26px)}
+  .touch-controls .attack{min-width:var(--pad-btn);height:var(--pad-btn);font-size:clamp(7px,2.2dvh,9px)}
+  .touch-controls .utility{min-width:calc(var(--pad-move) * .85);min-height:var(--pad-util-h);font-size:clamp(7px,2dvh,9px)}
+  .touch-controls .movement-pad,.touch-controls .attack-pad,.touch-controls .utility-row{gap:var(--pad-gap)}
+  .touch-controls .action-pad{gap:var(--pad-gap)}
+  .footer{position:absolute;z-index:8;top:var(--safe-top);right:var(--safe-left);padding:0;gap:0}
+  .footer > span:not(.footer-actions){display:none}
+  .footer-actions{display:flex;gap:6px}
+  .footer-actions button{display:inline-flex;align-items:center;justify-content:center;min-width:36px;min-height:36px;padding:0 6px;background:rgba(13,20,36,.78);border:1px solid #3a4967;border-radius:9px;color:#fff;font-size:17px;line-height:1;touch-action:manipulation;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
+  .footer-actions button:active{background:#2b4561;border-color:var(--cyan);transform:translateY(1px)}
+  .footer-actions button:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+  .footer-actions .fs-label{display:none}
+  .footer-actions .fs-icon{display:none}
+  .footer-actions svg{width:17px;height:17px}
+  .footer-actions button svg{display:none}
+  .footer-actions button:not([data-fullscreen="true"]) .fs-enter{display:inline}
+  .footer-actions button[data-fullscreen="true"] .fs-exit{display:inline}
+}
+
+/* ── Fullscreen (elemento <html> em tela cheia) ── */
+:fullscreen, :-webkit-full-screen { background: #000; }
+:fullscreen .app-shell, :-webkit-full-screen .app-shell { height: 100dvh; border: none; border-radius: 0; box-shadow: none; }
+:fullscreen .game-panel, :-webkit-full-screen .game-panel { border: none; border-radius: 0; box-shadow: none; }
+
+/* ── Compacto por ALTURA (paisagem de celular) ── */
+@media (max-height: 520px){
+  .match-hud{padding-top:calc(var(--safe-top) + 40px);padding-inline:var(--safe-left) var(--safe-right);gap:6px}
+  .fighter-info strong{font-size:14px}
+  .health-track{height:6px}
+  .round-info strong{font-size:16px}
+  .arena-caption{display:none}
+  .touch-controls{padding-bottom:var(--safe-bottom);padding-inline:var(--safe-left) var(--safe-right);gap:8px}
+  .footer-actions button{min-width:32px;min-height:32px;font-size:15px}
+  .footer-actions svg{width:15px;height:15px}
+  .menu-card{padding:16px 12px;gap:10px}
+  .menu-card h2{font-size:18px}
+}
+@media (max-height: 400px){
+  .app-shell{gap:8px}
+  .match-hud{padding-top:calc(var(--safe-top) + 36px);padding-inline:var(--safe-left) var(--safe-right);gap:4px}
+  .fighter-info{font-size:8px}
+  .fighter-info strong{font-size:13px}
+  .health-track{height:5px}
+  .round-info{font-size:7px}
+  .round-info strong{font-size:14px}
+  .touch-controls{padding-bottom:var(--safe-bottom);padding-inline:var(--safe-left) var(--safe-right);gap:6px}
+  .footer-actions button{min-width:30px;min-height:30px;font-size:14px}
+  .footer-actions svg{width:14px;height:14px}
+  .menu-card{padding:12px 8px;gap:8px}
+  .menu-card h2{font-size:16px}
+}
+
+/* ── Telas estreitas (retrato estreito): ataques em grade 2×2 ── */
+@media (max-width: 380px){
+  .attack-pad{flex-direction:column;gap:4px}
+  .control.attack{min-width:clamp(40px,12vw,54px);height:clamp(40px,12vw,54px)}
+}
+
+/* ── Retrato: aviso de girar o aparelho (cobre tudo) ── */
+@media(orientation:portrait) and (max-width:760px){
+  .portrait-hint{display:flex}
+}
