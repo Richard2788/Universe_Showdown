@@ -135,12 +135,15 @@ export class CanvasRenderer {
   /**
    * Impacto de bloqueio bem-sucedido: arco de "escudo" que se expande na
    * direção do atacante + faíscas radiais, tudo com fade (f.blockFx 0.28 → 0).
+   * `f.blockFxPower` escala raio/alfa/faíscas: >1 = bloqueio do FORTE, com
+   * anel de choque branco extra por cima do arco.
    * Posição: borda da hurtbox voltada para quem atacou, na altura do peito
    * (mais baixa se estiver agachado/block agachado).
    */
   drawBlockFx(f, floor) {
     const c = this.ctx;
     const t = f.blockFx / 0.28;                 // 1 (recém-bloqueado) → 0
+    const p = f.blockFxPower ?? 1;              // 1 normal · 1.8 forte
     const half = f.hurtbox?.halfWidth ?? 35;
     const hx = f.x + (f.blockFxSide ?? 1) * (half + 6);
     const hy = floor - (f.crouch ? 34 : 58);
@@ -150,19 +153,27 @@ export class CanvasRenderer {
     c.globalAlpha = Math.min(1, t * 1.6);
     // Flash suave atrás do escudo.
     c.fillStyle = 'rgba(134,241,210,.28)';
-    c.beginPath(); c.arc(hx, hy, 20 + (1 - t) * 26, 0, Math.PI * 2); c.fill();
+    c.beginPath(); c.arc(hx, hy, (20 + (1 - t) * 26) * p, 0, Math.PI * 2); c.fill();
     // Escudo: arco que se expande e afina.
-    const r = 24 + (1 - t) * 20;
-    c.strokeStyle = '#86f1d2'; c.lineWidth = 1 + 3 * t; c.lineCap = 'round';
+    const r = (24 + (1 - t) * 20) * p;
+    c.strokeStyle = '#86f1d2'; c.lineWidth = (1 + 3 * t) * p; c.lineCap = 'round';
     c.beginPath(); c.arc(hx, hy, r, center - 1.1, center + 1.1); c.stroke();
     // Faíscas radiais (encolhem junto com o fade).
-    c.strokeStyle = '#d9fff2'; c.lineWidth = 2;
+    c.strokeStyle = '#d9fff2'; c.lineWidth = 2 * p;
     for (let i = -2; i <= 2; i++) {
       const ang = center + i * 0.5;
-      const r1 = r + 5, r2 = r + 5 + 15 * t;
+      const r1 = r + 5, r2 = r + 5 + 15 * t * p;
       c.beginPath();
       c.moveTo(hx + Math.cos(ang) * r1, hy + Math.sin(ang) * r1);
       c.lineTo(hx + Math.cos(ang) * r2, hy + Math.sin(ang) * r2);
+      c.stroke();
+    }
+    // Só no bloqueio do forte: anel de choque branco que se abre rápido.
+    if (p > 1) {
+      c.globalAlpha = Math.min(1, t * 1.4);
+      c.strokeStyle = '#ffffff'; c.lineWidth = 2.5 * t + 0.5;
+      c.beginPath();
+      c.arc(hx, hy, r + (1 - t) * 34, center - 1.25, center + 1.25);
       c.stroke();
     }
     c.restore();

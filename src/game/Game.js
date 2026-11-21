@@ -6,6 +6,7 @@ import { buildPlaceholderAtlas } from '../characters/PlaceholderAtlas.js';
 import { PLASMO_DATA } from '../characters/Plasmo.js';
 import { CPUController, DIFFICULTIES } from '../ai/CPUController.js';
 import { InputManager } from '../core/InputManager.js';
+import { RunDetector } from '../core/RunDetector.js';
 import { GameLoop } from '../core/GameLoop.js';
 import { HUD } from '../ui/HUD.js';
 import {
@@ -21,6 +22,7 @@ export class Game {
     this.renderer = new CanvasRenderer(this.ctx, WIDTH, HEIGHT);
     this.hud = new HUD();
     this.input = new InputManager();
+    this.runDetector = new RunDetector(); // duplo-toque da direção → corrida
     this.player = new Fighter(PLAYER_SPAWN_X, '#51e3e8', 1, {
       // Plasmo: conteúdo normalizado a ~96px (metade do mais alto); escala
       // total 1.1 × 1 ≈ mesmo tamanho do placeholder (~105 px).
@@ -103,7 +105,13 @@ export class Game {
     const ko = this.player.health <= 0 || this.enemy.health <= 0;
     let playerActions = actions;   // modo pvc: jogador humano (teclado/touch)
     let enemyActions = {};         // pvc: controlado pela CPU abaixo
-    if (this.mode === 'pvc') enemyActions = this.cpuEnemy.update(dt);
+    if (this.mode === 'pvc') {
+      // Corrida do jogador: duplo-toque na direção (RunDetector) OU a tecla
+      // Shift (`actions.run`, vindo do KEY_MAP). A CPU (cvc) já emite `run`.
+      const run = this.runDetector.update(actions, dt) || Boolean(actions.run);
+      playerActions = { ...actions, run };
+      enemyActions = this.cpuEnemy.update(dt);
+    }
     if (this.mode === 'cvc') {     // espectador: CPU controla os dois
       playerActions = this.cpuPlayer.update(dt);
       enemyActions = this.cpuEnemy.update(dt);
@@ -120,7 +128,11 @@ export class Game {
     this.renderer.cpuStates.set(this.player, this.mode === 'cvc' ? this.cpuPlayer.stateName : null);
     this.renderer.cpuStates.set(this.enemy, this.mode === 'pvc' ? this.cpuEnemy.stateName : null);
     // Separação de corpos e virada de face (lógica pura em ./physics.js).
-    separateBodies(this.player, this.enemy);
+    // Quem aterrissa EM CIMA do oponente fixa o x do de baixo: a separação
+    // empurra só o que está por cima (evita deslizar o oponente na aterrissagem).
+    const keepFixed = this.player.justLanded ? this.enemy
+      : this.enemy.justLanded ? this.player : null;
+    separateBodies(this.player, this.enemy, { keepFixed });
     this.player.x = Math.max(STAGE_MARGIN, Math.min(WIDTH - STAGE_MARGIN, this.player.x));
     this.enemy.x = Math.max(STAGE_MARGIN, Math.min(WIDTH - STAGE_MARGIN, this.enemy.x));
     updateFaces(this.player, this.enemy);
@@ -157,6 +169,7 @@ export class Game {
   closeMenu() {
     this.mode = this.previousMode || 'pvc';
     this.previousMode = null;
+    this.runDetector.reset(); // não herda o duplo-toque de antes do menu
   }
 
   /** Troca a dificuldade da CPU em tempo real (atalhos 1/2/3 e menu). */
@@ -184,11 +197,13 @@ export class Game {
       fighter.jumpBuffer = 0; fighter.landingTimer = 0; fighter.walking = false;
       fighter.blocking = false; fighter.blockTimer = 0; fighter.prev = {};
       fighter.blockFx = 0; fighter.blockFxSide = 1; fighter.kbVx = 0;
+      fighter.running = false; fighter.justLanded = false;
       animator.setState('idle');
       animator.frameIndex = 0;
       animator.timeInFrame = 0;
       animator.finished = false;
     }
     this.frame = 0;
+    this.runDetector.reset(); // round novo: duplo-toque do round anterior não vale
   }
 }

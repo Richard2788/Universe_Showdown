@@ -46,6 +46,8 @@ export const ANIMATION_DATA = {
     // ── Fila 0: estados neutros ──────────────────────────────
     idle:        { row: 0, col: 0,  frames: 4,  fps: 8,  loop: true },
     walk:        { row: 0, col: 4,  frames: 6,  fps: 12, loop: true },
+    // Corrida: células próprias (10..15) da fila 0 — passada maior, fps alto.
+    run:         { row: 0, col: 10, frames: 6,  fps: 20, loop: true },
     // ── Fila 1: estados utilitários ──────────────────────────
     jump:        { row: 1, col: 0,  frames: 2,  fps: 6,  loop: false },
     crouch:      { row: 1, col: 2,  frames: 2,  fps: 8,  loop: true },

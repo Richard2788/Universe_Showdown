@@ -67,6 +67,14 @@ describe('bloqueio em pé', () => {
     assert.ok(d.x > dStartX + 20);
   });
 
+  // Recuo agachado = SÓ o empurrão (agachado não anda): isola o pushback do
+  // avanço da caminhada. Forte empurra 46 px vs 28 px do médio/leve.
+  it('forte bloqueado empurra bem mais que o médio (block agachado)', () => {
+    const m = resolve('mediumAttack', { right: true, crouch: true });
+    const h = resolve('heavyAttack', { right: true, crouch: true });
+    assert.ok(h.d.x - m.d.x > 15);
+  });
+
   it('bloquear o forte tira apenas chip 2 (hp 98)', () => {
     const { d } = resolve('heavyAttack', { right: true });
     assert.equal(d.health, 98);

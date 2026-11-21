@@ -89,6 +89,14 @@ canvas{display:block;width:100%;height:100%;touch-action:none}
 .menu-start:hover{filter:brightness(1.2)}
 .menu-start.primary{background:linear-gradient(90deg,var(--cyan),#86f1d2);color:#06231f;border-color:transparent}
 .menu-hint{margin:0;font-size:8px;letter-spacing:.14em;color:var(--muted)}
+/* Botão de tela cheia no menu: mesmo estilo .menu-start + ícones que
+   sincronizam com data-fullscreen (FullscreenToggle). Esconde se a API
+   não existir (atributo hidden, que o display do CSS não pode vencer). */
+.menu-fs{display:inline-flex;align-items:center;justify-content:center;gap:8px}
+.menu-fs svg{width:15px;height:15px;display:none}
+.menu-fs[hidden]{display:none}
+.menu-fs:not([data-fullscreen="true"]) .fs-enter{display:inline}
+.menu-fs[data-fullscreen="true"] .fs-exit{display:inline}
 .menu-overlay{position:fixed;inset:0;z-index:60;display:none;align-items:center;justify-content:center;padding:16px;background:radial-gradient(ellipse at 50% 30%,rgba(23,36,59,.92),rgba(9,13,24,.97));backdrop-filter:blur(5px)}
 .menu-overlay.is-open{display:flex}
 

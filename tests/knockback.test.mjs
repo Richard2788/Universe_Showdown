@@ -88,7 +88,9 @@ describe('knockback', () => {
     const frames = Math.round(ATTACKS.heavyAttack.activeStart / DT);
     for (let i = 0; i < frames; i++) { step(a, {}, d); step(d, { right: true }, a); }
     step(a, {}, d);
-    assert.ok(d.x > 330 + 40);
+    // Antes: limiar 40 (caminhada ~40 já passava sozinha). Com o empurrão do
+    // forte em 46 px, o recuo passa a ser ~86 px — limiar 70 isola o pushback.
+    assert.ok(d.x > 330 + 70);
   });
 
   it('knockback domina o movimento durante o hitstun', () => {

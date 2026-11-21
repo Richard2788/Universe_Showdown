@@ -25,8 +25,11 @@ export const ATTACKS = {
 // longo alcance — sem dar alcance grátis demais a quem o acerta.
 export const HURTBOX_HALF_WIDTH = 35;
 
-// Recuo empurrado ao bloquear (px) — o "recuo" físico da defesa.
-const BLOCK_PUSHBACK = 24;
+// Recuo empurrado ao bloquear (px) — o "recuo" físico da defesa. O bloqueio
+// do FORTE empurra bem mais, deixando o impacto pesado visível (o médio/leve
+// mantém o recuo curto de "um pouco para trás").
+const BLOCK_PUSHBACK = 28;
+const BLOCK_PUSHBACK_HEAVY = 46;
 // Atrito do knockback (px/s²): velocidade de arremesso decai até parar.
 const KB_FRICTION = 1200;
 
@@ -52,9 +55,11 @@ export class Fighter {
     this.blocking = false; // segurando o recuo: em postura de defesa
     this.blockTimer = 0;   // blockstun: travado após defender um golpe
     this.blockFx = 0;      // efeito visual de impacto do bloqueio (decai)
+    this.blockFxPower = 1; // intensidade do efeito (1 normal, >1 = bloqueio do forte)
     this.blockFxSide = 1;  // lado do defensor onde o golpe foi bloqueado (+1/-1)
     this.kbVx = 0;         // knockback: velocidade de arremesso (px/s, decai)
     this.running = false;  // correndo neste frame (só para frente; animação 'run')
+    this.justLanded = false; // aterrissou neste frame (ar → chão; fixa o x do oponente)
     this.prev = {};        // ações do frame anterior (debounce honesto)
     // Cada personagem tem tamanho e hurtbox próprios (Plasmo é 4× maior).
     this.renderScale = options.renderScale ?? 1;
@@ -67,6 +72,7 @@ export class Fighter {
   getState() {
     if (this.attack) return this.attackName;
     if (this.hitTimer > 0) return 'hit';
+    if (this.crouch) return 'crouch';
     if (this.y > 0 || this.landingTimer > 0) return 'jump';
     if (this.blockTimer > 0 || this.blocking) return 'block';
     if (this.crouch) return 'crouch';
@@ -77,8 +83,10 @@ export class Fighter {
     this.hitTimer = Math.max(0, this.hitTimer - dt);
     this.blockTimer = Math.max(0, this.blockTimer - dt);
     this.blockFx = Math.max(0, this.blockFx - dt);
+    if (this.blockFx === 0) this.blockFxPower = 1; // reseta junto com o fade
     const prev = this.prev; // ações do frame anterior → borda de subida
     this.running = false;   // recalculado no ramo de movimento; falso ao atacar
+    this.justLanded = false; // vira true só no frame ar → chão (embaixo)
     if (this.attack) {
       this.attack.elapsed += dt;
       const { activeStart, activeEnd, reach, damage, maxTargetY, height, blockstun, chip, knockback } = this.attack.data;
@@ -100,9 +108,13 @@ export class Fighter {
           // Defendeu: chip (só o forte tira vida), blockstun e recuo empurrado.
           opponent.health -= chip;
           opponent.blockTimer = blockstun;
-          opponent.x += (this.x >= opponent.x ? -1 : 1) * BLOCK_PUSHBACK;
-          // Gatilho do efeito visual de impacto do bloqueio (0,28 s de brilho).
+          const heavy = this.attackName === 'heavyAttack';
+          opponent.x += (this.x >= opponent.x ? -1 : 1)
+            * (heavy ? BLOCK_PUSHBACK_HEAVY : BLOCK_PUSHBACK);
+          // Gatilho do efeito visual de impacto do bloqueio (0,28 s de brilho);
+          // o forte dispara em potência maior (raio/faíscas/anel de choque).
           opponent.blockFx = 0.28;
+          opponent.blockFxPower = heavy ? 1.8 : 1;
           opponent.blockFxSide = this.x >= opponent.x ? 1 : -1;
           this.attackHit = true;
         } else {
@@ -141,7 +153,7 @@ export class Fighter {
       if (actions.jump && !prev.jump) this.jumpBuffer = 0.1;
       else this.jumpBuffer = Math.max(0, this.jumpBuffer - dt);
       if (this.jumpBuffer > 0 && this.y === 0 && grounded && !stunned) {
-        this.vy = 560;
+        this.vy = 620;  // antes 565; arco mais alto para garantir atravessada completa por cima
         this.jumpBuffer = 0;
       }
       this.walking = grounded && !stunned && moving && !this.crouch;
@@ -168,6 +180,17 @@ export class Fighter {
     const wasAir = this.y > 0;
     this.vy -= 1500 * dt;
     this.y = Math.max(0, this.y + this.vy * dt);
+    // Movimento horizontal durante o pulo: garante que o personagem avança
+    // sobre o oponente, atravessando completamente por cima em vez de permanecer
+    // no mesmo eixo (o que causaria colisão ou "teleporte" ao aterrizar).
+    // Usa metade da velocidade de caminhada (62,5 px/s) — lento o suficiente
+    // para o jogador manter controle direcional ao aterrisar e usar ataques.
+    const inAir = this.y > 0 && !this.attack && !this.crouch;
+    if (inAir) {
+      const moving = actions.left !== actions.right;
+      const dir = actions.right ? 1 : actions.left ? -1 : 0;
+      if (dir !== 0 && moving) this.x += dir * (WALK_SPEED / 2) * dt;
+    }
     // Knockback: deslize para trás com atrito (vale mesmo em hitstun; não é
     // input do jogador — o jogador recupera o controle quando o stun acaba).
     if (this.kbVx !== 0) {
@@ -181,6 +204,7 @@ export class Fighter {
         // Pouso: segura o estado 'jump' até a animação terminar no solo.
         this.landingTimer = Math.max(0, JUMP_ANIM.frames * JUMP_ANIM.frameTime
           - JUMP_ANIM.airFrames * JUMP_ANIM.frameTime);
+        this.justLanded = true; // frame ar → chão: Game fixa o x do oponente
       }
     }
     this.landingTimer = Math.max(0, this.landingTimer - dt);

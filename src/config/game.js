@@ -26,7 +26,7 @@ export const ENEMY_SPAWN_X = 660;
 /** Velocidade de caminhada (px/s). Metade do valor original (250 px/s). */
 export const WALK_SPEED = 125;
 
-/** Velocidade de corrida (px/s). 2× a caminhada, só para frente. */
+/** Velocidade de corrida (px/s). Dobro da caminhada (valor original). */
 export const RUN_SPEED = 250;
 
 /** `?debug=1` (qualquer valor) liga o overlay de depuração. */

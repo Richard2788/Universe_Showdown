@@ -89,6 +89,17 @@ function poseFor(state, i, s) {
         frontHand: [6 - swing * 8, 12], backHand: [-6 + swing * 8, 12],
       });
     }
+    case 'run': {
+      // Corrida: torso inclinado (lean 5), passada maior e joelho mais alto.
+      const ph = (i / n) * Math.PI * 2;
+      const swing = Math.sin(ph);
+      return P({
+        lean: 5,
+        frontFoot: [swing * 24, Math.max(0, swing) * 8],
+        backFoot: [-swing * 24, Math.max(0, -swing) * 8],
+        frontHand: [4 - swing * 14, 8], backHand: [-2 + swing * 14, 6],
+      });
+    }
     case 'jump':
       return i === 0
         ? P({ frontFoot: [10, 14], backFoot: [-10, 14], frontHand: [12, -8], backHand: [-10, -4] })

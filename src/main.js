@@ -33,6 +33,8 @@ const touch = new TouchControls(document.querySelector('#touch-controls'), game.
 
 document.querySelector('#reset').addEventListener('click', () => game.reset());
 new FullscreenToggle(document.querySelector('#fullscreen'));
+// Mesmo toggle dentro do menu de início (visível antes da partida começar).
+new FullscreenToggle(document.querySelector('#fullscreen-menu'));
 
 // ── Menu de início: dificuldade da CPU + modo (jogar vs CPU / CPU vs CPU) ──
 const menuOverlay = document.querySelector('#menu-overlay');

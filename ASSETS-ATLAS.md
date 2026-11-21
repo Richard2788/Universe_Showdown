@@ -16,8 +16,8 @@ O estado do personagem define onde ele começa na grade (`row`, `col`) e
 quantas células ocupa (`frames`). Cada estado lê da esquerda para a direita.
 
 ```text
-col:  0    1    2    3    4    5    6    7   ...        18
-row 0 [idle idle idle idle|walk walk walk walk walk walk ... ]
+col:  0    1    2    3    4    5    6    7   ...  10  ...  15  ...  18
+row 0 [idle idle idle idle|walk walk walk walk walk walk|run run run run run run ... ]
 row 1 [jump jump|crch crch|block block|hit hit hit| (vago) ]
 row 2 [leve leve leve leve leve leve| (vago) ... ]
 row 3 [médio ... 11 frames ... ]
@@ -54,6 +54,40 @@ Fonte da verdade em runtime: `src/characters/animations.js`
 | `frameTime` | duração de **cada** frame em segundos; usada em golpes para que a animação dure exatamente a duração do golpe (`frameTime = duration / frames`) |
 | `loop` | reinicia ao terminar (só idle/walk/crouch/block) |
 | `activeFrom`, `activeTo` | índices de frames ativos (contato visual) |
+| `frameAnchors` | pivô horizontal **por frame** (px dentro da célula); ver "Âncora por frame" abaixo |
+
+### Âncora por frame (`frameAnchors`) — espelhar sem deslizar
+
+O desenho ancora em `-anchorX`, não no centro da célula. `getFrameRect()`
+resolve a prioridade **`frameAnchors[i]` → `anchorX` (estado) → `pivotX`**.
+Como o `scale(face, 1)` do renderer gira em torno desse ponto, o corpo
+permanece no mesmo eixo do lutador ao trocar de face — só braços e pernas
+trocam de lado (o sprite não "pula" na tela ao virar).
+
+- Placeholder (grade 96 × 96, corpo centrado): `pivotX = 48` já é a âncora.
+- Arte real do Plasmo (`src/characters/Plasmo.js`): cada estado tem
+  `frameAnchors` = média horizontal dos pixels visíveis (`A > 20`) da
+  célula, medida frame a frame — o centro de massa do corpo varia entre
+  poses (no `jump`, de 53 a 85 px numa célula de 161 px).
+- Regenerar após trocar os PNGs:
+
+  ```powershell
+  powershell -File scripts/measure-anchors.ps1
+  ```
+
+  e copiar os arrays `anchorX` do JSON gerado para `frameAnchors` em
+  `Plasmo.js`. O teste `tests/mirror.test.mjs` confere que cada estado
+  tem `frameAnchors.length === frames`.
+
+### Estado `run` (corrida)
+
+- O `Fighter` devolve `getState() === 'run'` ao correr (250 px/s, só para
+  frente; gatilho: duplo-toque na direção — `src/core/RunDetector.js` —
+  ou Shift no teclado).
+- Plasmo: **reutiliza `walk.png`** a `fps: 20` com os **mesmos
+  `frameAnchors`** do walk (sem sheet nova).
+- Placeholder: células 10..15 da fila 0 em `animations.js`, pose procedural
+  com inclinação (`lean: 5`) e passada maior em `PlaceholderAtlas.js`.
 
 ### Regra de sincronia com hitbox
 
