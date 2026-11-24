@@ -9,11 +9,21 @@
  * Perfis em DIFFICULTIES: dificuldade controla tempo de reação, ritmo de
  * decisão, agressividade, esquiva e — principalmente — `allowedAttacks`,
  * a lista de tipos de golpe que a CPU pode usar.
+ *
+ * Defesa (2026-11-24): bloqueio CLÁSSICO e confiável — ao ver o oponente
+ * atacar em alcance, a CPU segura o recuo (e agacha para chute, que fura a
+ * guarda em pé). Apenas o atraso (reaction) e a chance de ESQUIVAR
+ * (dodgeChance) variam por dificuldade; não existe "chance de bloquear".
  */
 import { ATTACKS } from '../fighters/Fighter.js';
 
 // Ordem do mais forte ao mais fraco (para punição: usa o mais forte possível).
 const ATTACK_ORDER = ['heavyAttack', 'kick', 'mediumAttack', 'lightAttack'];
+
+// Distância máxima em que o golpe do oponente ainda é uma ameaça real
+// (alcance do forte + meia-hurtbox do alvo, com margem). Dentro dela a CPU
+// reage com defesa tradicional.
+const BLOCK_RANGE = 140;
 
 export const DIFFICULTIES = {
   facil: {
@@ -21,8 +31,7 @@ export const DIFFICULTIES = {
     reaction: [0.45, 0.8],   // atraso para reagir ao golpe do oponente (s)
     think: [0.4, 0.8],       // intervalo entre decisões (s)
     aggression: 0.25,        // chance de atacar quando está em alcance
-    dodgeChance: 0.15,       // chance de recuar/pular ao reagir a um golpe
-    blockChance: 0.08,       // chance de bloquear (segurar o recuo) ao reagir
+    dodgeChance: 0.15,       // chance de ESQUIVAR (recuar/pular) em vez de bloquear
     pauseChance: 0.35,       // chance de pausar (fica parado) ao decidir
     jumpChance: 0.05,        // chance de pular para fechar distância
     runDistance: 200,        // reduzido de 250 para permitir caminhada mais próxima
@@ -36,7 +45,6 @@ export const DIFFICULTIES = {
     think: [0.22, 0.4],
     aggression: 0.5,
     dodgeChance: 0.35,
-    blockChance: 0.25,
     pauseChance: 0.2,
     jumpChance: 0.08,
     runDistance: 130,        // reduzido de 220 para permitir caminhada mais próxima
@@ -50,7 +58,6 @@ export const DIFFICULTIES = {
     think: [0.12, 0.2],
     aggression: 0.75,
     dodgeChance: 0.6,
-    blockChance: 0.5,
     pauseChance: 0.08,
     jumpChance: 0.12,
     runDistance: 130,        // reduzido de 170 para permitir caminhada mais próxima
@@ -67,7 +74,6 @@ export const DIFFICULTIES = {
     think: [0.08, 0.14],
     aggression: 0.88,
     dodgeChance: 0.7,
-    blockChance: 0.6,
     pauseChance: 0.04,
     jumpChance: 0.14,
     runDistance: 120,
@@ -81,7 +87,6 @@ export const DIFFICULTIES = {
     think: [0.05, 0.1],
     aggression: 0.95,
     dodgeChance: 0.8,
-    blockChance: 0.72,
     pauseChance: 0.02,
     jumpChance: 0.16,
     runDistance: 110,
@@ -108,6 +113,9 @@ export class CPUController {
     this.sawAttack = false;   // oponente iniciou um golpe?
     this.reactAt = Infinity;  // instância em que a reação dispara
     this.reacted = false;     // reação deste golpe já foi processada?
+    this.crouchBlock = false; // golpe baixo em curso → guarda baixa no block
+    this.jumpForward = false; // o pulo pedido é de aproximação (direção travada)?
+    this.defendTimer = 0;     // compromisso com a defesa do reflexo (s)
     // Objeto de ações na MESMA forma do input do teclado. Reutilizado entre
     // frames (zerado no início de cada update).
     this.actions = {
@@ -197,21 +205,30 @@ export class CPUController {
     } else if (!o.attack) {
       this.sawAttack = false;
       this.reacted = false;
+      this.crouchBlock = false;
     }
-    if (this.sawAttack && !this.reacted && this.time >= this.reactAt) {
+    // Reage assim que o golpe entra no alcance defensivo: o atacante pode
+    // iniciar longe e entrar correndo — o atraso do perfil continua valendo.
+    if (this.sawAttack && !this.reacted && dist < BLOCK_RANGE && this.time >= this.reactAt) {
       this.reacted = true;
-      if (dist < 135) {
-        const roll = Math.random();
-        if (roll < p.blockChance) {
-          // Bloquear: segura o recuo (defesa tradicional) por um tempo.
-          this.intent = 'block';
-          this.intentTimer = this.rand([0.4, 0.7]);
-          this.stateName = 'block';
-        } else if (roll < p.blockChance + p.dodgeChance) {
-          this.intent = Math.random() < 0.25 ? 'jump' : 'retreat';
-          this.intentTimer = this.rand([0.25, 0.6]);
-          this.stateName = 'dodge';
-        }
+      // Chute (low) fura a guarda em pé: bloquear tradicionalmente é agachar.
+      this.crouchBlock = Boolean(o.attack && ATTACKS[o.attackName]?.height === 'low');
+      if (Math.random() < p.dodgeChance) {
+        // Esquiva em vez de bloquear (só sorteio; o bloqueio é o padrão).
+        this.crouchBlock = false;
+        this.jumpForward = false; // pulo de esquiva: reto, no lugar (sem direção)
+        this.intent = Math.random() < 0.25 ? 'jump' : 'retreat';
+        this.intentTimer = this.rand([0.25, 0.6]);
+        this.defendTimer = this.intentTimer; // compromisso: não re-decide
+        this.stateName = 'dodge';
+      } else {
+        // Bloqueio clássico: segura o recuo até o fim do golpe em curso.
+        this.intent = 'block';
+        this.intentTimer = o.attack
+          ? Math.max(0.4, o.attack.data.duration - o.attack.elapsed + 0.2)
+          : 0.4;
+        this.defendTimer = this.intentTimer; // compromisso: não re-decide
+        this.stateName = 'block';
       }
     }
 
@@ -230,11 +247,12 @@ export class CPUController {
     }
 
     // ── Decisão periódica ──
-    // Enquanto está comprometido com o block (defesa reagindo ao golpe),
-    // não re-decide: segura a postura até o timer do reflexo acabar.
-    const committedToBlock = this.intent === 'block' && this.intentTimer > 0;
+    // Enquanto a defesa do reflexo (block ou esquiva) está em curso, não
+    // re-decide: segura a postura escolhida até o timer do reflexo acabar.
+    this.defendTimer = Math.max(0, this.defendTimer - dt);
+    const defending = this.defendTimer > 0;
     this.thinkTimer -= dt;
-    if (!committedToBlock && this.thinkTimer <= 0) {
+    if (!defending && this.thinkTimer <= 0) {
       this.thinkTimer = this.rand(p.think);
       if (o.y < 90 && dist <= this.bestRange() && Math.random() < p.aggression) {
         const name = this.pickAttack(dist);
@@ -249,6 +267,7 @@ export class CPUController {
         this.stateName = 'pause';
       } else if (Math.random() < p.jumpChance && dist > 140) {
         this.intent = 'jump';
+        this.jumpForward = true; // aproximação: pula já avançando (impulso travado)
         this.intentTimer = 0.15;
         this.stateName = 'jump';
       } else {
@@ -268,11 +287,19 @@ export class CPUController {
         }
         break;
       case 'retreat':
+        if (dir > 0) a.left = true; else a.right = true;
+        break;
       case 'block': // segurar o recuo = postura de defesa no Fighter
         if (dir > 0) a.left = true; else a.right = true;
+        // Chute (low): guarda baixa junto com o recuo, senão o golpe fura.
+        if (this.crouchBlock) a.crouch = true;
         break;
       case 'jump':
         a.jump = true;
+        // Direção travada no impulso do pulo (2026-11-24): o pulo de
+        // aproximação já sai avançando; o pulo de esquiva fica no lugar
+        // (dodgeChance usa `jumpForward` falso → pulo reto, sem direção).
+        if (this.jumpForward) { if (dir > 0) a.right = true; else a.left = true; }
         break;
     }
     this.intentTimer -= dt;

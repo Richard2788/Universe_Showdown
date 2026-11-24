@@ -33,6 +33,13 @@ const BLOCK_PUSHBACK_HEAVY = 46;
 // Atrito do knockback (px/s²): velocidade de arremesso decai até parar.
 const KB_FRICTION = 1200;
 
+// Pulo travado: a direção e a velocidade horizontal são fixadas no IMPULSO.
+// Depois de pular não dá mais para mudar o arco nem acelerar — segurar para o
+// lado no ar não faz nada, e a velocidade é a escolhida no voo (andar: metade
+// da caminhada; corrida: o impulso de 250 px/s é mantido). Pulo sem direção
+// é reto, sem deslocar.
+const AIR_JUMP_SPEED = WALK_SPEED / 2;
+
 // Animação do pulo do Plasmo: 25 frames (arco completo da sheet 5×5).
 // Os 16 primeiros cobrem o tempo de ar da física (vy 560 / g 1500 =
 // 0,747 s ≈ 16 × 0,047); os 9 restantes são a recuperação de aterrissagem
@@ -62,6 +69,8 @@ export class Fighter {
     this.health = this.maxHealth; this.attack = null; this.attackName = null;
     this.attackHit = false; this.crouch = false; this.hitTimer = 0;
     this.jumpBuffer = 0; // janela em que um comando de pulo ainda vale ao aterrissar
+    this.jumpDir = 0;    // direção travada no impulso do pulo (-1|0|1)
+    this.jumpSpeed = 0;  // velocidade travada no impulso (px/s); encerra no pouso
     this.landingTimer = 0; // recuperação de aterrissagem (estado 'jump' em solo)
     this.blocking = false; // segurando o recuo: em postura de defesa
     this.blockTimer = 0;   // blockstun: travado após defender um golpe
@@ -154,25 +163,28 @@ export class Fighter {
       // Recuperação de aterrissagem: sem input até a animação do pulo acabar
       // (frames de splat → poça → reforma rodam em solo).
       const grounded = this.landingTimer <= 0;
+      // Chão de verdade: no ar não existe controle (o pulo é travado no
+      // impulso) — mover, agachar, atacar e bloquear exigem estar em solo.
+      const onGround = grounded && this.y === 0;
       const stunned = this.blockTimer > 0; // blockstun: sem ações até passar
       // Postura antes do movimento: agachado NÃO anda (defesa agachada fica
       // parada no lugar, como nos clássicos — só a defesa em pé recua).
-      this.crouch = grounded && !stunned && Boolean(actions.crouch);
+      this.crouch = onGround && !stunned && Boolean(actions.crouch);
       // Agachar NÃO corta a reação de block: a sequência completa joga uma
       // vez por bloqueio (inclusive no bloqueio agachado); a guarda baixa
       // só volta quando o timer termina (getState prioriza a reação).
       // Corrida: só para frente (na direção do oponente, `this.face`), fora
-      // de agachar, blockstun e hitstun. No ar a velocidade é mantida (pulo
-      // corrido) mas `running` fica false — a animação em solo é 'jump'.
+      // de agachar, blockstun e hitstun. No ar a velocidade do impulso é
+      // mantida (pulo corrido) mas `running` fica false — a animação é 'jump'.
       const moving = actions.left !== actions.right;
       const dir = actions.right ? 1 : actions.left ? -1 : 0;
       const forward = moving && dir === this.face;
-      const canRun = grounded && !stunned && this.hitTimer <= 0
+      const canRun = onGround && !stunned && this.hitTimer <= 0
         && !this.crouch && Boolean(actions.run) && forward;
       this.running = canRun && this.y === 0;
       const speed = canRun ? RUN_SPEED : WALK_SPEED;
-      if (grounded && !stunned && !this.crouch && actions.left) this.x -= speed * dt;
-      if (grounded && !stunned && !this.crouch && actions.right) this.x += speed * dt;
+      if (onGround && !stunned && !this.crouch && actions.left) this.x -= speed * dt;
+      if (onGround && !stunned && !this.crouch && actions.right) this.x += speed * dt;
       // Pulo: dispara na BORDA DE SUBIDA (pressionou agora) — segurar não
       // re-pula. O buffer de 0,1 s cobre o input pouco antes de aterrissar.
       if (actions.jump && !prev.jump) this.jumpBuffer = 0.1;
@@ -181,9 +193,15 @@ export class Fighter {
         this.vy = 620;  // antes 565; arco mais alto para garantir atravessada completa por cima
         this.jumpBuffer = 0;
         this.blockAnimTimer = 0; // pular corta a reação de block
+        // Direção travada no impulso: no ar não dá para mudar o arco nem a
+        // velocidade. Sem direção (ou duas direções), o pulo é reto no lugar.
+        this.jumpDir = actions.right && !actions.left ? 1
+          : actions.left && !actions.right ? -1 : 0;
+        // Corrida antes do pulo mantém o impulso (250 px/s) no ar.
+        this.jumpSpeed = this.running ? RUN_SPEED : AIR_JUMP_SPEED;
       }
-      this.walking = grounded && !stunned && moving && !this.crouch;
-      if (grounded && !stunned) {
+      this.walking = onGround && !stunned && moving && !this.crouch;
+      if (onGround && !stunned) {
         // Ataques: também só na borda de subida (debounce honesto — vale
         // igual para teclado, touch e CPU, que emite `true` por 1 frame).
         for (const name of Object.keys(ATTACKS)) {
@@ -198,25 +216,23 @@ export class Fighter {
         }
       }
       // Defesa tradicional = recuo: segurar a direção que se afasta do
-      // oponente (em solo, sem atacar). Em pé bloqueia high/mid; agachado
+      // oponente (no chão, sem atacar). Em pé bloqueia high/mid; agachado
       // bloqueia mid/low — a checagem de acerto aplica a tabela.
       const away = opponent.x >= this.x ? -1 : 1;
       const holdingBack = away > 0 ? actions.right : actions.left;
-      this.blocking = grounded && !stunned && !this.attack && holdingBack;
+      this.blocking = onGround && !stunned && !this.attack && holdingBack;
     }
     const wasAir = this.y > 0;
     this.vy -= 1500 * dt;
     this.y = Math.max(0, this.y + this.vy * dt);
-    // Movimento horizontal durante o pulo: garante que o personagem avança
-    // sobre o oponente, atravessando completamente por cima em vez de permanecer
-    // no mesmo eixo (o que causaria colisão ou "teleporte" ao aterrizar).
-    // Usa metade da velocidade de caminhada (62,5 px/s) — lento o suficiente
-    // para o jogador manter controle direcional ao aterrisar e usar ataques.
+    // Movimento horizontal durante o pulo: vem do IMPULSO travado no voo
+    // (`jumpDir`/`jumpSpeed`) — atravessa o oponente quando a direção escolhida
+    // aponta para ele, e o input não altera mais o arco nem a velocidade.
     const inAir = this.y > 0 && !this.attack && !this.crouch;
     if (inAir) {
-      const moving = actions.left !== actions.right;
-      const dir = actions.right ? 1 : actions.left ? -1 : 0;
-      if (dir !== 0 && moving) this.x += dir * (WALK_SPEED / 2) * dt;
+      // Pulo travado (2026-11-24): a direção e a velocidade vêm do impulso.
+      // O input não altera o arco — só o impulso definido no voo move o corpo.
+      this.x += this.jumpDir * this.jumpSpeed * dt;
     }
     // Knockback: deslize para trás com atrito (vale mesmo em hitstun; não é
     // input do jogador — o jogador recupera o controle quando o stun acaba).
@@ -232,6 +248,8 @@ export class Fighter {
         this.landingTimer = Math.max(0, JUMP_ANIM.frames * JUMP_ANIM.frameTime
           - JUMP_ANIM.airFrames * JUMP_ANIM.frameTime);
         this.justLanded = true; // frame ar → chão: Game fixa o x do oponente
+        this.jumpDir = 0; // impulso encerra no pouso
+        this.jumpSpeed = 0;
       }
     }
     this.landingTimer = Math.max(0, this.landingTimer - dt);

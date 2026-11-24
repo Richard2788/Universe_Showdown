@@ -14,8 +14,8 @@ Jogo de luta tradicional em visão lateral, concebido sob a abordagem **Mobile F
 - Movimentação: andar, correr, pular, agachar, virar para o oponente e limites de arena.
 - Combate com quatro golpes: leve, médio, forte e chute, com startup, active e recovery.
 - Defesa direcional em pé e agachado, com chip apenas no forte, blockstun, empurrão e efeito visual.
-- Esquiva por pulo, atravessar o oponente no ar, knockback com atrito e hitstun.
-- IA com cinco perfis (três no menu; `elite`/`lendario` na campanha), reação com atraso, aproximação, corrida, esquiva, bloqueio e punição.
+- Esquiva por pulo com direção travada no impulso (sem controle no ar), atravessar o oponente, knockback com atrito e hitstun.
+- IA com cinco perfis (três no menu; `elite`/`lendario` na campanha), reação com atraso, aproximação, corrida, esquiva, **bloqueio clássico** (segura o recuo e agacha contra chute) e punição.
 - Modos **Jogador vs CPU** (`pvc`), **CPU vs CPU** (`cvc`) e **Campanha · 5 fases**.
 - Menu inicial com chips das 5 fases, seleção de dificuldade, tela cheia e aviso de rotação.
 - Controles touch multi-touch por `pointerId` e teclado unificado pelo `InputManager`.
@@ -133,7 +133,7 @@ O `preview` serve a build para verificação local; ele não substitui um servid
 npm test
 ```
 
-Estado atual: **12 arquivos de teste, 25 suítes e 110 checks aprovados**.
+Estado atual: **14 arquivos de teste, 30 suítes e 129 checks aprovados**.
 
 ## Controles
 
@@ -173,7 +173,7 @@ O mapeamento fica em `src/config/controls.js`. É possível manter uma direção
 
 - **Jogar · Player vs CPU:** o jogador controla o Plasmo; a CPU controla o oponente.
 - **Assistir · CPU vs CPU:** as duas IAs jogam; os controles touch ficam ocultos.
-- **Dificuldades:** Fácil, Médio e Difícil, com reação, agressividade, bloqueio, esquiva e golpes permitidos diferentes.
+- **Dificuldades:** Fácil, Médio e Difícil (mais Elite/Lendário na campanha), com reação, agressividade, esquiva e golpes permitidos diferentes. O **bloqueio é clássico em todas**: ao ver o golpe em alcance a CPU segura o recuo (e agacha contra chute).
 
 | Parâmetro | Efeito |
 |---|---|

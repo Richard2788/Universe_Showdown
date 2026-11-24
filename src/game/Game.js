@@ -445,6 +445,7 @@ export class Game {
       fighter.attack = null; fighter.attackName = null;
       fighter.attackHit = false; fighter.crouch = false; fighter.hitTimer = 0;
       fighter.jumpBuffer = 0; fighter.landingTimer = 0; fighter.walking = false;
+      fighter.jumpDir = 0; fighter.jumpSpeed = 0; // sem impulso pendente de pulo
       fighter.blocking = false; fighter.blockTimer = 0;
       fighter.blockAnimTimer = 0; fighter.blockAnimPulse = false; // round novo: sem reação pendente
       fighter.prev = {};

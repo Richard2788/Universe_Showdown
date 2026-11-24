@@ -16,6 +16,25 @@ Formato inspirado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/)
 - Publicação no Render.
 - Licença do código e origem/licença dos assets.
 
+## [2026-11-24] — Pulo travado e bloqueio clássico da CPU
+
+### Alterado
+
+- **Pulo travado:** a direção e a velocidade horizontal são fixadas no **impulso** — depois de pular não dá para mudar o arco nem acelerar. Andar no impulso usa a velocidade fixa do ar (62,5 px/s); **corrida antes do pulo mantém o impulso de 250 px/s**; sem direção (ou com as duas direções) o pulo é reto, no lugar. O impulso encerra no pouso.
+- Sem controle no ar: mover, agachar, atacar e **bloquear** passam a exigir estar no chão (`y === 0`) — antes, o pulo era controlado a cada frame no ar.
+- **Bloqueio clássico da CPU:** ao ver o oponente atacar em alcance defensivo (140 px), a CPU segura o recuo e bloqueia até o fim do golpe — sem sorteio. `dodgeChance` só decide **esquivar** em vez de bloquear; `blockChance` foi removido dos perfis. Contra chute (low) ela agacha junto, senão o golpe fura a guarda em pé.
+- Reação da IA também vale quando o atacante inicia longe e entra correndo no alcance; o compromisso da defesa (block/esquiva) não é mais sobrescrito pela decisão periódica.
+- Pulo de aproximação da CPU já sai avançando (direção travada no impulso); o pulo de esquiva é reto.
+
+### Adicionado
+
+- `tests/jumplock.test.mjs` (9 checks): direção/velocidade travadas no impulso, pulo reto, impulso da corrida, fim do impulso no pouso e ausência de controle no ar.
+- `tests/cpublock.test.mjs` (10 checks): recuo/clássico, defesa real sem dano, guarda baixa contra chute, bloqueio por entrada no alcance, duração do bloqueio, atraso por dificuldade, esquiva, pulos (esquiva reto / aproximação avançando) e contrato de dados dos perfis.
+
+### Verificado
+
+- `npm test`: **129 checks aprovados**, 30 suítes, 0 falhas; `npm run build` concluída sem erro.
+
 ## [2026-11-24] — Campanha de 5 fases: rounds, cronômetro e pontuação
 
 ### Adicionado

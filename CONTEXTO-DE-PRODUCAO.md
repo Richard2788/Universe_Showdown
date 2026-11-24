@@ -173,7 +173,7 @@ O jogador acessa o mesmo endereço web. Não faz parte do MVP criar aplicativos 
 | Velocidade de corrida | 250 px/s | Somente para frente; nunca para recuar. |
 | Impulso do pulo | 620 px/s | Arco mais alto para permitir atravessar o oponente. |
 | Gravidade | 1500 px/s² | — |
-| Controle horizontal no ar | 62,5 px/s | Metade da caminhada. |
+| Velocidade do pulo travado | 62,5 px/s (corrida: 250 px/s) | Direção e velocidade fixadas no impulso; sem controle no ar. |
 | Janela de buffer do pulo | 0,1 s | Cobre input pouco antes da aterrissagem. |
 | Recuperação de aterrissagem | ~0,42 s | 9 frames de 0,047 s; mantém o estado `jump` no solo. |
 | Margem lateral da arena | 55 px | Ninguém ultrapassa a borda. |
@@ -184,7 +184,8 @@ Regras implementadas:
 - Andar para a esquerda/direita, pular, agachar e correr.
 - A corrida é acionada por **duplo-toque na direção** (janela de 0,28 s) ou por **Shift** no teclado. Só funciona para frente e não substitui a defesa ao recuar.
 - O pulo inicia na borda de subida; segurar o botão não repete o pulo.
-- No ar, os corpos podem se sobrepor (pulo atravessa). No chão, `separateBodies` impede que as hurtboxes se cruzem.
+- **Pulo travado:** a direção e a velocidade horizontal são fixadas no impulso — depois de pular não dá para mudar o arco nem acelerar (andar: 62,5 px/s; corrida antes do pulo: impulso de 250 px/s mantido; sem direção: pulo reto). No ar também não vale agachar, atacar ou bloquear.
+- No ar, os corpos podem se sobrepor (pulo atravessa quando a direção aponta para o oponente). No chão, `separateBodies` impede que as hurtboxes se cruzem.
 - Quando um lutador aterrissa em cima do outro, a separação empurra apenas quem está por cima, evitando deslizar o oponente.
 - A face de cada lutador é atualizada todo frame para encarar o oponente.
 - Agachado não anda: a defesa agachada fica parada no lugar.
@@ -232,16 +233,20 @@ Observações:
 
 A IA usa as mesmas ações e os mesmos dados de golpe do jogador — não recebe alcance extra nem lê hitboxes ocultas.
 
-| Dificuldade | Reação | Ritmo de decisão | Agressividade | Bloqueio | Esquiva | Corre a partir de | Golpes permitidos |
-|---|---:|---:|---:|---:|---:|---:|---|
-| Fácil | 0,45–0,80 s | 0,40–0,80 s | 25% | 8% | 15% | 300 px | Leve e chute |
-| Médio | 0,25–0,40 s | 0,22–0,40 s | 50% | 25% | 35% | 220 px | Leve, médio e chute |
-| Difícil | 0,10–0,20 s | 0,12–0,20 s | 75% | 50% | 60% | 170 px | Todos, com punição |
+| Dificuldade | Reação | Ritmo de decisão | Agressividade | Esquiva | Corre a partir de | Golpes permitidos |
+|---|---:|---:|---:|---:|---:|---|
+| Fácil | 0,45–0,80 s | 0,40–0,80 s | 25% | 15% | 200 px | Leve e chute |
+| Médio | 0,25–0,40 s | 0,22–0,40 s | 50% | 35% | 130 px | Leve, médio e chute |
+| Difícil | 0,10–0,20 s | 0,12–0,20 s | 75% | 60% | 130 px | Todos, com punição |
+| Elite (fase 4) | 0,06–0,12 s | 0,08–0,14 s | 88% | 70% | 120 px | Todos, com punição |
+| Lendário (fase 5) | 0,03–0,08 s | 0,05–0,10 s | 95% | 80% | 110 px | Todos, com punição |
+
+**Bloqueio (2026-11-24):** clássico e confiável em todos os perfis — ao ver o oponente atacar em alcance (140 px), a CPU segura o recuo até o fim do golpe; contra chute ela agacha junto (a guarda em pé fura). `dodgeChance` só decide esquivar em vez de bloquear; não existe mais "chance de bloquear".
 
 Comportamentos implementados:
 
 - aproximar, recuar, pausar, pular e correr;
-- bloquear segurando o recuo;
+- **bloquear segurando o recuo** (e agachar contra chute), com o atraso do perfil;
 - escolher golpes por alcance, altura do alvo e postura;
 - punir hitstun/recuperação apenas no difícil;
 - respeitar startup, recovery, hitstun, aterrissagem e estado do próprio personagem;
@@ -468,8 +473,8 @@ Não há classe de máquina de estados explícita; as prioridades e transições
 
 ### Testes
 
-- 12 arquivos de teste em `tests/` (mais `helpers.mjs`), 25 suítes, 110 checks.
-- Cobertura: loop, input, HUD, defesa, knockback, locomoção, corrida, altura de golpe, efeito de bloqueio, âncoras e integridade dos dados do Plasmo.
+- 14 arquivos de teste em `tests/` (mais `helpers.mjs`), 30 suítes, 129 checks.
+- Cobertura: loop, input, HUD, defesa, knockback, locomoção, corrida, pulo travado, altura de golpe, efeito de bloqueio, bloqueio clássico da IA, âncoras e integridade dos dados do Plasmo.
 - Os testes são contrato de regressão: mudanças de balanceamento exigem justificativa e atualização explícita dos testes.
 - Não há testes de navegador, DOM real, touch físico ou e2e.
 
@@ -619,6 +624,7 @@ O MVP só deve ser considerado concluído quando todos os critérios abaixo esti
 | 2026-11-21 | Empurrão de bloqueio, correção do pulo, novos efeitos e agachamento responsivo. |
 | 2026-11-23 | Atualização completa do estado real: combate/IA/defesa/animação implementados; rounds, gamepad, áudio, validação mobile, licenças e deploy pendentes; decisão de não integrar SAT.js nesta fase; criação de `CHANGELOG.md` e `CREDITS.md`. |
 | 2026-11-23 | Nova spritesheet de bloqueio do Plasmo (9 poses, fundo transparente), correção do loop de ResizeObserver na tela cheia e CPU mais próxima do oponente (`runDistance`/`rangeOf`). |
+| 2026-11-24 | Campanha de 5 fases (rounds, cronômetro, pontuação e resultado), pulo travado (direção/velocidade no impulso, sem controle no ar) e bloqueio clássico confiável da CPU. |
 
 ---
 

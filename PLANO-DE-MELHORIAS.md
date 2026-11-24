@@ -37,13 +37,13 @@
 - [x] Dois lutadores provisórios e movimentação touchscreen/teclado.
 - [x] Combate com quatro golpes, janelas de startup/active/recovery, dano, chip, knockback e hitstun.
 - [x] Defesa direcional em pé/agachado, blockstun, empurrão e efeito visual de bloqueio.
-- [x] IA com cinco perfis (três no menu; `elite`/`lendario` na campanha), reação, aproximação, corrida, esquiva, bloqueio e punição.
-- [x] Corrida por duplo-toque/Shift, pulo atravessável, aterrissagem e separação de corpos.
+- [x] IA com cinco perfis (três no menu; `elite`/`lendario` na campanha), reação, aproximação, corrida, esquiva, **bloqueio clássico** (segura o recuo; agacha contra chute) e punição.
+- [x] Corrida por duplo-toque/Shift, pulo atravessável com direção travada no impulso, aterrissagem e separação de corpos.
 - [x] Menu inicial com campanha de 5 fases, modos `pvc`/`cvc`, seleção de dificuldade, tela cheia e aviso de retrato.
 - [x] Campanha com rounds (melhor de 3), cronômetro, pontuação, progressão de fase e tela de resultado.
 - [x] Arte real do Plasmo por estado, âncoras por frame e fallback placeholder para o oponente.
 - [x] HUD em DOM com vida, rótulos e status; na campanha, fase/round, timer e pontuação.
-- [x] Testes automatizados: 12 arquivos de teste, 25 suítes, 110 checks.
+- [x] Testes automatizados: 14 arquivos de teste, 30 suítes, 129 checks.
 - [x] Build de produção verificada sem erros.
 
 ### O que falta para o MVP
