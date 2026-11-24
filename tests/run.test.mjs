@@ -90,10 +90,13 @@ describe('corrida no Fighter (250 px/s, só para frente)', () => {
 });
 
 describe('CPU corre quando longe', () => {
-  it('runDistance por perfil: 300 / 220 / 170 px', () => {
-    assert.equal(DIFFICULTIES.facil.runDistance, 300);
-    assert.equal(DIFFICULTIES.medio.runDistance, 220);
-    assert.equal(DIFFICULTIES.dificil.runDistance, 170);
+  it('runDistance por perfil: 200 / 130 / 130 px', () => {
+    // 2026-11-23 — limites reduzidos (antes 300 / 220 / 170) a pedido: a CPU
+    // precisa caminhar mais perto do oponente para que hitboxes menores
+    // (ex.: golpe fraco do Knight) alcancem a hurtbox no limite de proximidade.
+    assert.equal(DIFFICULTIES.facil.runDistance, 200);
+    assert.equal(DIFFICULTIES.medio.runDistance, 130);
+    assert.equal(DIFFICULTIES.dificil.runDistance, 130);
   });
 
   it('aproximando de longe (400 px) a CPU pede run', () => {
@@ -103,7 +106,7 @@ describe('CPU corre quando longe', () => {
     cpu.thinkTimer = 10;
     const a = cpu.update(DT);
     assert.equal(a.right, true);
-    assert.equal(a.run, true); // 400 > runDistance 300
+    assert.equal(a.run, true); // 400 > runDistance 200
   });
 
   it('perto (150 px) a CPU aproxima sem correr', () => {
@@ -113,6 +116,6 @@ describe('CPU corre quando longe', () => {
     cpu.thinkTimer = 10;
     const a = cpu.update(DT);
     assert.equal(a.right, true);
-    assert.equal(a.run, false); // 150 < runDistance 300
+    assert.equal(a.run, false); // 150 < runDistance 200
   });
 });

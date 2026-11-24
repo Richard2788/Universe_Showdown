@@ -616,6 +616,7 @@ O MVP só deve ser considerado concluído quando todos os critérios abaixo esti
 | 2026-11-19 | Testes de módulos, pulo atravessável e ajustes de colisão/input. |
 | 2026-11-21 | Empurrão de bloqueio, correção do pulo, novos efeitos e agachamento responsivo. |
 | 2026-11-23 | Atualização completa do estado real: combate/IA/defesa/animação implementados; rounds, gamepad, áudio, validação mobile, licenças e deploy pendentes; decisão de não integrar SAT.js nesta fase; criação de `CHANGELOG.md` e `CREDITS.md`. |
+| 2026-11-23 | Nova spritesheet de bloqueio do Plasmo (9 poses, fundo transparente), correção do loop de ResizeObserver na tela cheia e CPU mais próxima do oponente (`runDistance`/`rangeOf`). |
 
 ---
 

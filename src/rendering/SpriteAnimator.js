@@ -59,6 +59,17 @@ export class SpriteAnimator {
     this.finished = false;
   }
 
+  /**
+   * Rebobina o estado atual sem trocar dele — usado pelo Game.js para
+   * re-armar a reação de block quando um novo bloqueio acontece DURANTE o
+   * play anterior (senão a 2ª sequência não mostraria todos os sprites).
+   */
+  rewind() {
+    this.frameIndex = 0;
+    this.timeInFrame = 0;
+    this.finished = false;
+  }
+
   /** Avança a animação — chamar a cada passo fixo da simulação. */
   update(dt) {
     const s = this.state;

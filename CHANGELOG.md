@@ -16,6 +16,46 @@ Formato inspirado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/)
 - Publicação no Render.
 - Licença do código e origem/licença dos assets.
 
+## [2026-11-24] — Animação de block: uma reação por bloqueio
+
+### Alterado
+
+- `block` deixa de ser postura em loop: agora é uma reação **one-shot disparada apenas em bloqueio bem-sucedido** (`blockAnimTimer` = 8 sprites a 6 fps = 1,33 s, `loop: false`, células 2→9 da sheet — começa com o escudo já formado e termina no último sprite). Segurar para trás sem levar golpe mostra `walk`/`idle`: não existe mais “block parado” em nenhum personagem (`Fighter.getState` é compartilhado por todos).
+- A reação tem prioridade sobre andar **e agachar**: a sequência completa joga uma vez por bloqueio (inclusive no bloqueio agachado) e a guarda baixa só volta quando o play termina. Ela só é cortada por atacar, pular ou golpe que furar.
+- Novo bloqueio durante um play em curso re-arma do frame 0 (`blockAnimPulse` no impacto + `SpriteAnimator.rewind()` consumido no `Game.update`), para que a 2ª sequência também mostre todos os sprites — combo bloqueado não deixa o sprite congelado no meio.
+- `Game.reset()` zera `blockAnimTimer`/`blockAnimPulse`: round novo nunca começa em `block` sem levar golpe.
+- `public/assets/characters/plasmo/block.json` (documentação) e o placeholder em `animations.js` alinhados ao runtime: `col: 2, frames: 8, fps: 6, loop: false`.
+
+### Adicionado
+
+- Teste `tests/blockanim.test.mjs` com 12 checks cobrindo o contrato: sem golpe = walk/idle, reação única com prioridade sobre andar/agachar, cortes (atacar/pular/furar), block agachado e re-arm em combo.
+
+### Verificado
+
+- `npm test`: **100 checks aprovados**, 0 falhas; `npm run build` concluída sem erro.
+
+## [2026-11-23] — Bloqueio com sheet nova, tela cheia e proximidade da CPU
+
+### Adicionado
+
+- Nova spritesheet de bloqueio do Plasmo (`WhatsApp Image 2026-11-23 at 14.40.50.jpeg`, 10 poses em grade 1 × 10) com o fundo preto do JPEG removido por chroma key — nenhuma PNG do jogo tem fundo opaco. A sheet enviada antes (2026-11-20) era na verdade o estado `hit` e foi realocada para ele.
+- Botão de tela cheia também no menu do jogo; o menu permanece aberto para escolher modo e dificuldade.
+
+### Alterado
+
+- `block` do Plasmo: 4 → 8 frames (sheet nova 2026-11-23 com 10 poses; o runtime usa as células 2→9) e célula 192 × 192 → 320 × 320, com novas âncoras por frame; `extract-plasmo.ps1` (manifesto) e `measure-anchors.ps1` apontam para a sheet nova (retângulos manuais por frame, pois a grade da sheet é irregular).
+- `hit` do Plasmo: 3 → 9 frames (sheet de 2026-11-20, grade 5 × 2), célula 192 × 192 → 320 × 320 e 12 → 30 fps — as 9 poses (impacto → atordoado → recupera a guarda) cabem nos 0,3 s de hitstun.
+- CPU mais próxima do oponente: `runDistance` 300 / 220 / 170 → 200 / 130 / 130 e margem de `rangeOf` de +8 para −2 px, para que hitboxes menores (ex.: golpe fraco do Knight) alcancem a hurtbox no limite de proximidade.
+- Teste `runDistance por perfil` atualizado para os novos valores, com justificativa no próprio teste.
+
+### Corrigido
+
+- Erro “ResizeObserver loop completed with undelivered notifications” ao alternar a tela cheia: `Game.js` passa a usar a flag `_isFullscreen` (atualizada nos eventos `fullscreenchange`) e uma checagem de idempotência em `resize()`.
+
+### Verificado
+
+- `npm test`: **88 checks aprovados**, 0 falhas; `npm run build` concluída sem erro.
+
 ## [2026-11-23] — Sincronização documental com o estado real
 
 ### Adicionado

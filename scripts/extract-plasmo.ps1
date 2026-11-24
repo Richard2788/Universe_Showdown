@@ -190,8 +190,25 @@ Build-State 'jump'        'WhatsApp Image 2026-11-17 at 18.28.54 (1).jpeg'  5 5 
 ) @{ frameTime = 0.0470; loop = $false } -CellAnchor
 # Crouch: sheet com célula 200px — frame mais largo (199px) não cabe em 192.
 Build-State 'crouch'      'WhatsApp Image 2026-11-17 at 18.28.54 (3).jpeg'  8 2 @('0,0','0,1','0,2','0,3','0,4','0,5','0,6','0,7','1,0','1,1','1,2') @{ fps = 10 } -CellSize 320
-Build-State 'block'       'WhatsApp Image 2026-11-17 at 18.28.53.jpeg'      4 8 @('2,0','2,1','2,2','2,3') @{ fps = 6 } -ScaleToHeight 160
-Build-State 'hit'         'WhatsApp Image 2026-11-17 at 18.28.53.jpeg'      4 8 @('1,1','1,2','1,3') @{ fps = 12; loop = $false } -ScaleToHeight 160
+# Block: sheet CORRETA (2026-11-23, 1 linha × 10 colunas). A sheet anterior
+# (2026-11-20) era na verdade o estado `hit` (foi trocada por engano).
+# Grade IRREGULAR (feita à mão, ~120 px por pose, sem alinhamento exato):
+# retângulos manuais "x,y,l,a" por frame, medidos pelos separadores de fundo
+# da sheet — um corte uniforme de floor(1195/10)=119 px cortaria 3 px da
+# pose 8 e arrastaria o rabo da pose 7 para dentro da pose 9.
+# UniformScale 1.9: pose em pé (~101 px de conteúdo) → 96 px, altura
+# canônica igual a idle/walk (CONTENT_SCALE × 1,9 ≈ 0,955 → leve downscale).
+# O JSON documenta o estado do RUNTIME: reação começa na célula 2 (escudo já
+# formado), 8 frames sem loop — células 0–1 ficam fora por definição.
+Build-State 'block'       'WhatsApp Image 2026-11-23 at 14.40.50.jpeg' 10 1 @(
+  '0,0,103,111',   '121,0,101,111', '245,0,101,111', '364,0,101,111', '484,0,101,111',
+  '606,0,101,111', '725,0,101,111', '845,0,101,111', '968,0,106,111', '1088,0,105,111'
+) @{ fps = 6; col = 2; frames = 8; loop = $false } -CellSize 320 -UniformScale 1.9
+# Hit: sheet de 2026-11-20 (grade 5 × 2 → 9 poses, última célula vazia):
+# impacto → atordoado (olhos em X) → recupera a guarda. fps 30 faz as 9
+# poses caberem exatamente nos 0,3 s de hitstun (hitTimer em Fighter.js),
+# sem cortar a recuperação nem congelar no meio do arco.
+Build-State 'hit'         'WhatsApp Image 2026-11-20 at 07.01.56.jpeg'  5 2 @('0,0','0,1','0,2','0,3','0,4','1,0','1,1','1,2','1,3') @{ fps = 30; loop = $false } -CellSize 320 -UniformScale 1
 Build-State 'lightAttack'  'WhatsApp Image 2026-11-17 at 18.28.54.jpeg'     5 2 @('0,0','0,1','0,2','0,3','0,4','1,0','1,1','1,2','1,3','1,4') @{ frameTime = 0.0280; loop = $false; activeFrom = 5; activeTo = 7 } -ScaleToHeight 191 -CellSize 320
 # Ataque médio: o frame original '0,6' (rastro azul) é cortado pelas bordas
 # da célula na origem (sprites consecutivos se sobrepõem) — foi removido.

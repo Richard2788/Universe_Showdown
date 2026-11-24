@@ -51,7 +51,7 @@ export const ANIMATION_DATA = {
     // ── Fila 1: estados utilitários ──────────────────────────
     jump:        { row: 1, col: 0,  frames: 2,  fps: 6,  loop: false },
     crouch:      { row: 1, col: 2,  frames: 2,  fps: 8,  loop: true },
-    block:       { row: 1, col: 4,  frames: 2,  fps: 8,  loop: true },
+    block:       { row: 1, col: 4,  frames: 2,  fps: 8,  loop: false },
     hit:         { row: 1, col: 6,  frames: 3,  fps: 12, loop: false },
     // ── Fila 2..5: ataques (1 estado por linha) ──────────────
     // frameTime = duração do golpe / nº de frames (sincronizado com Fighter.js)

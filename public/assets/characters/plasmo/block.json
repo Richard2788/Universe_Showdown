@@ -1,19 +1,19 @@
 ﻿{
     "meta":  {
-                 "frameHeight":  192,
-                 "columns":  4,
-                 "pivotX":  96,
-                 "frameWidth":  192,
+                 "frameHeight":  320,
+                 "columns":  10,
+                 "pivotX":  160,
+                 "frameWidth":  320,
                  "image":  "block.png",
-                 "pivotY":  192,
+                 "pivotY":  320,
                  "rows":  1
              },
     "states":  {
                    "block":  {
                                  "row":  0,
-                                 "loop":  true,
-                                 "frames":  4,
-                                 "col":  0,
+                                 "loop":  false,
+                                 "frames":  8,
+                                 "col":  2,
                                  "fps":  6
                              }
                }

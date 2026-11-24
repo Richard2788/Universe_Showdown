@@ -25,7 +25,7 @@ export const DIFFICULTIES = {
     blockChance: 0.08,       // chance de bloquear (segurar o recuo) ao reagir
     pauseChance: 0.35,       // chance de pausar (fica parado) ao decidir
     jumpChance: 0.05,        // chance de pular para fechar distância
-    runDistance: 300,        // acima disso, corre para aproximar (raro)
+    runDistance: 200,        // reduzido de 250 para permitir caminhada mais próxima
     punish: false,           // pune hitstun/recuperação do oponente?
     allowedAttacks: ['lightAttack', 'kick'],
     weights: { lightAttack: 3, kick: 1 },
@@ -39,7 +39,7 @@ export const DIFFICULTIES = {
     blockChance: 0.25,
     pauseChance: 0.2,
     jumpChance: 0.08,
-    runDistance: 220,
+    runDistance: 130,        // reduzido de 220 para permitir caminhada mais próxima
     punish: false,
     allowedAttacks: ['lightAttack', 'mediumAttack', 'kick'],
     weights: { lightAttack: 3, mediumAttack: 2, kick: 1.5 },
@@ -53,7 +53,7 @@ export const DIFFICULTIES = {
     blockChance: 0.5,
     pauseChance: 0.08,
     jumpChance: 0.12,
-    runDistance: 170,
+    runDistance: 130,        // reduzido de 170 para permitir caminhada mais próxima
     punish: true,
     allowedAttacks: ['lightAttack', 'mediumAttack', 'heavyAttack', 'kick'],
     weights: { lightAttack: 3, mediumAttack: 2, heavyAttack: 1.2, kick: 1.5 },
@@ -97,7 +97,7 @@ export class CPUController {
 
   /** Alcance efetivo de um golpe: mesma condição de acerto do Fighter + margem. */
   rangeOf(name) {
-    return ATTACKS[name].reach + this.opponent.hurtbox.halfWidth + 8;
+    return ATTACKS[name].reach + this.opponent.hurtbox.halfWidth - 2;
   }
 
   /** Maior alcance entre os golpes permitidos (para decidir aproximar). */

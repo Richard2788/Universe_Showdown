@@ -48,7 +48,7 @@ Estados do placeholder:
 | `run` | 6 | 20 fps | Sim |
 | `jump` | 2 | 6 fps | Não |
 | `crouch` | 2 | 8 fps | Sim |
-| `block` | 2 | 8 fps | Sim |
+| `block` | 2 | 8 fps | Não |
 | `hit` | 3 | 12 fps | Não |
 | `lightAttack` | 6 | 0,28/6 s | Não |
 | `mediumAttack` | 11 | 0,48/11 s | Não |
@@ -121,9 +121,9 @@ O formato continua compatível com JSON e com o template `public/assets/characte
 | `row`, `col`, `frames` | Posição e extensão do estado na grade. |
 | `columns` | Colunas da atlas do estado; usado para calcular a posição linear. |
 | `frameWidth`, `frameHeight` | Tamanho da célula daquele estado. |
-| `fps` | Velocidade de estados cíclicos (idle, walk, crouch, block). |
+| `fps` | Velocidade de estados cíclicos (idle, walk, crouch) e da reação `block` (6 fps). |
 | `frameTime` | Duração de **cada** frame em segundos; usada em golpes para que a animação dure exatamente a duração do golpe. |
-| `loop` | Reinicia ao terminar (só idle/walk/run/crouch/block). |
+| `loop` | Reinicia ao terminar (só idle/walk/run/crouch; `block` é one-shot, `loop: false`). |
 | `activeFrom`, `activeTo` | Índices de frames ativos (contato visual). |
 | `frameAnchors` | Pivô horizontal **por frame** (px dentro da célula). |
 
@@ -140,8 +140,8 @@ Fonte de verdade: `src/characters/Plasmo.js`. Dimensões conferidas nos PNGs em 
 | `run` | `walk.png` | 2240 × 320 | 320 × 320 | 7 | 20 fps | Sim | — |
 | `jump` | `jump.png` | 4025 × 133 | 161 × 133 | 25 | `frameTime = 0,047` | Não | — |
 | `crouch` | `crouch.png` | 3520 × 320 | 320 × 320 | 11 | 10 fps | Sim | — |
-| `block` | `block.png` | 768 × 192 | 192 × 192 | 4 | 6 fps | Sim | — |
-| `hit` | `hit.png` | 576 × 192 | 192 × 192 | 3 | 12 fps | Não | — |
+| `block` | `block.png` | 3200 × 320 | 320 × 320 | 8 (células 2→9) | 6 fps | Não | — |
+| `hit` | `hit.png` | 2880 × 320 | 320 × 320 | 9 | 30 fps | Não | — |
 | `lightAttack` | `lightAttack.png` | 3200 × 320 | 320 × 320 | 10 | `frameTime = 0,028` | Não | 5–7 |
 | `mediumAttack` | `mediumAttack.png` | 3200 × 320 | 320 × 320 | 10 | `frameTime = 0,048` | Não | 5–6 |
 | `heavyAttack` | `heavyAttack.png` | 5120 × 320 | 320 × 320 | 16 | `frameTime = 0,045` | Não | 7–11 |
@@ -150,7 +150,7 @@ Fonte de verdade: `src/characters/Plasmo.js`. Dimensões conferidas nos PNGs em 
 Observações:
 
 - `run` reutiliza `walk.png` a 20 fps com as mesmas âncoras; não existe sheet própria de corrida.
-- `block` e `hit` não declaram `frameWidth`/`frameHeight`; herdam a `meta` 192 × 192.
+- `block` (sheet correta de 2026-11-23, 1 × 10, 10 poses) usa retângulos manuais por frame na extração: a grade da sheet é irregular (~120 px/pose), então o corte uniforme de `floor(1195/10)` cortaria a pose 8. O runtime consome só as células 2→9 (**8 frames**, `col: 2, frames: 8`): a pose 0–1 é o escudo se formando antes do impacto, então a reação começa já com o escudo formado e termina no último sprite — one-shot `loop: false`, disparada apenas em bloqueio bem-sucedido (`blockAnimTimer`, contrato em `tests/blockanim.test.mjs`). `hit` (sheet de 2026-11-20, 5 × 2, 9 poses) herdou a célula 320 × 320 que era do `block` — os dois estados declaram `frameWidth`/`frameHeight` próprios. `hit` roda a 30 fps para cobrir as 9 poses nos 0,3 s de hitstun.
 - `jump` tem 25 frames: os 16 primeiros cobrem o tempo de ar da física; os 9 restantes são a recuperação de aterrissagem em solo (`airFrames = 16` em `Fighter.js`).
 - Não há estados `victory`/`defeat` nem animação de nocaute.
 

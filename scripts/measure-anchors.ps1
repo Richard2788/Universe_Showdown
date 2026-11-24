@@ -20,7 +20,7 @@ Add-Type -AssemblyName System.Drawing
 
 # Estado → largura da célula de saída (mesmos valores de PLASMO_DATA).
 $States = [ordered]@{
-  idle = 320; walk = 320; jump = 161; crouch = 320; block = 192; hit = 192
+  idle = 320; walk = 320; jump = 161; crouch = 320; block = 320; hit = 320
   lightAttack = 320; mediumAttack = 320; heavyAttack = 320; kick = 320
 }
 

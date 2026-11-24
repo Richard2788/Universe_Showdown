@@ -36,6 +36,29 @@ export class Game {
     this.resizeObserver = new ResizeObserver(() => this.resize());
     this.resizeObserver.observe(canvas);
     this.resize();
+    // Flag para evitar loop do ResizeObserver quando entra/sai do fullscreen.
+    // requestFullscreen() pode disparar o ResizeObserver ANTES de definir
+    // document.fullscreenElement, então usamos um flag próprio atualizado
+    // pelos eventos fullscreenchange em vez de checar o documento diretamente.
+    this._isFullscreen = !!(
+      document.fullscreenElement ||
+      document.webkitFullscreenElement ||
+      document.msFullscreenElement
+    );
+    const onFullscreenChange = () => {
+      this._isFullscreen = !!(
+        document.fullscreenElement ||
+        document.webkitFullscreenElement ||
+        document.msFullscreenElement
+      );
+    };
+    for (const event of [
+      'fullscreenchange',
+      'webkitfullscreenchange',
+      'msfullscreenchange',
+    ]) {
+      document.addEventListener(event, onFullscreenChange);
+    }
     // Modo debug: ?debug=1 exibe hitboxes, posição e estado dos lutadores.
     const params = new URLSearchParams(window.location.search);
     this.debug = isDebugEnabled();
@@ -76,8 +99,10 @@ export class Game {
       this.renderer.setAnimator(fighter, animator);
     }
     const states = Object.keys(PLASMO_DATA.states);
+    // query string de cache-busting para forçar recarregamento de assets alterados
+    const cacheBust = '?v=20261123-block-hit';
     Promise.all(states.map((name) =>
-      loadAtlasImage(`/assets/characters/plasmo/${PLASMO_DATA.states[name].image}`)
+      loadAtlasImage(`/assets/characters/plasmo/${PLASMO_DATA.states[name].image}${cacheBust}`)
         .then((img) => this.fighterAnimators.get(this.player)?.setImage(name, img))
     )).then(() => {
       this.renderer.usesPlaceholder = [...this.renderer.animators.values()]
@@ -86,10 +111,19 @@ export class Game {
   }
 
   resize() {
+    // Se o documento já estiver em fullscreen, não mexer nas dimensões do canvas.
+    // Isso evita o loop ResizeObserver <-> fullscreen change que o navegador
+    // reporta como "undelivered notifications".
+    if (this._isFullscreen) return;
     const rect = this.canvas.getBoundingClientRect();
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
-    this.canvas.width = Math.max(1, Math.round(rect.width * dpr));
-    this.canvas.height = Math.max(1, Math.round(rect.height * dpr));
+    const newWidth = Math.max(1, Math.round(rect.width * dpr));
+    const newHeight = Math.max(1, Math.round(rect.height * dpr));
+    // Se as dimensões já estão corretas, não fazer nada — trava qualquer loop
+    // do ResizeObserver mesmo que o flag _isFullscreen ainda não esteja setado.
+    if (this.canvas.width === newWidth && this.canvas.height === newHeight) return;
+    this.canvas.width = newWidth;
+    this.canvas.height = newHeight;
     this.scale = Math.min(this.canvas.width / WIDTH, this.canvas.height / HEIGHT);
     this.offsetX = (this.canvas.width - WIDTH * this.scale) / 2;
     this.offsetY = (this.canvas.height - HEIGHT * this.scale) / 2;
@@ -121,7 +155,15 @@ export class Game {
     this.enemy.update(dt, enemyActions, this.player);
     // Animação avança no MESMO passo fixo da simulação (não no render)
     for (const [fighter, animator] of this.fighterAnimators) {
-      animator.setState(fighter.getState());
+      const state = fighter.getState();
+      // Re-arm da reação de block: um novo bloqueio DURANTE o play anterior
+      // rebobina do frame 0 (sem isso, a 2ª sequência terminaria congelada
+      // antes do timer zerar e não mostraria todos os sprites).
+      if (fighter.blockAnimPulse) {
+        if (state === 'block' && animator.stateName === 'block') animator.rewind();
+        fighter.blockAnimPulse = false;
+      }
+      animator.setState(state);
       animator.update(dt);
     }
     // Estado interno da IA (mostrado no ?debug=1).
@@ -195,7 +237,9 @@ export class Game {
       fighter.attack = null; fighter.attackName = null;
       fighter.attackHit = false; fighter.crouch = false; fighter.hitTimer = 0;
       fighter.jumpBuffer = 0; fighter.landingTimer = 0; fighter.walking = false;
-      fighter.blocking = false; fighter.blockTimer = 0; fighter.prev = {};
+      fighter.blocking = false; fighter.blockTimer = 0;
+      fighter.blockAnimTimer = 0; fighter.blockAnimPulse = false; // round novo: sem reação pendente
+      fighter.prev = {};
       fighter.blockFx = 0; fighter.blockFxSide = 1; fighter.kbVx = 0;
       fighter.running = false; fighter.justLanded = false;
       animator.setState('idle');
