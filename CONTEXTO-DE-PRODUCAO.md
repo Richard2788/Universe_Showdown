@@ -1,15 +1,15 @@
 # Contexto de Produção — Universe Showdown
 
 > Documento de referência do produto e da implementação. Use este arquivo para orientar decisões de design, arquitetura, desenvolvimento, testes e futuras contribuições.
-> **Estado do projeto:** protótipo jogável (alpha), atualizado em **2026-11-23**.
+> **Estado do projeto:** protótipo jogável (alpha), atualizado em **2026-11-24**.
 > **Legenda de status:** **Implementado** = existe no código e tem evidência verificável (teste automatizado ou build); **Parcial** = funciona, mas falta uma parte relevante ou validação; **Pendente** = não existe na build atual.
 > Status de código não substitui validação em aparelho físico. O que depende de celular real, deploy ou licença continua pendente até ser comprovado.
 
 ## 0. Estado atual da implementação
 
-O projeto saiu do scaffold e hoje é um **protótipo jogável de luta local**. É possível abrir o jogo, escolher a dificuldade da CPU e iniciar uma partida **Jogador vs CPU** ou assistir **CPU vs CPU**. O combate tem quatro golpes, defesa direcional, posturas, stun, knockback, efeitos de bloqueio e uma IA com três perfis.
+O projeto saiu do scaffold e hoje é um **protótipo jogável de luta local**. É possível abrir o jogo, escolher a dificuldade da CPU, jogar **Jogador vs CPU**, assistir **CPU vs CPU** ou percorrer a **campanha de 5 fases** (melhor de 3 rounds, cronômetro, pontuação e tela de resultado). O combate tem quatro golpes, defesa direcional, posturas, stun, knockback, efeitos de bloqueio e IA com cinco perfis (três no menu rápido; `elite`/`lendario` nas fases finais).
 
-Ainda não é o MVP completo: faltam rounds, cronômetro, resultado, gamepad, áudio, validação em aparelho físico e publicação no Render.
+Ainda não é o MVP completo: faltam save/progressão persistente, seleção de personagem, gamepad, áudio, validação em aparelho físico e publicação no Render.
 
 | Área | Status | Evidência no projeto |
 |---|---|---|
@@ -18,22 +18,23 @@ Ainda não é o MVP completo: faltam rounds, cronômetro, resultado, gamepad, á
 | Movimentação | Implementado | `src/fighters/Fighter.js`, `src/game/physics.js`, `src/config/game.js`; coberta por testes. |
 | Combate | Implementado | Quatro golpes com startup/active/recovery, dano, alcance, altura, chip e knockback. |
 | Defesa | Implementado | Defesa direcional em pé/agachado, blockstun, empurrão e efeito visual de bloqueio. |
-| IA | Implementado | `src/ai/CPUController.js` com três dificuldades, reação, esquiva, bloqueio e punição. |
+| IA | Implementado | `src/ai/CPUController.js` com cinco perfis (três no menu; `elite`/`lendario` nas fases 4 e 5), reação, esquiva, bloqueio e punição. |
 | Animações | Parcial | Plasmo com arte real por estado; oponente ainda em atlas placeholder; sem `victory`/`defeat`. |
-| Modos e menu | Implementado | Menu inicial, `pvc`, `cvc`, seleção de dificuldade e tela cheia. |
+| Modos e menu | Implementado | Menu inicial com chips das 5 fases, `pvc`, `cvc`, campanha, seleção de dificuldade e tela cheia. |
 | Controles | Parcial | Touch multi-touch e teclado implementados; gamepad pendente. |
-| Partida | Parcial | Vida e status `READY`/`ROUND END`; sem cronômetro, rounds, placar ou tela de resultado. |
+| Partida | Implementado | Campanha: melhor de 3, cronômetro, pontuação, progressão e resultado. Partida rápida: vida única e `READY`/`ROUND END`. |
 | Áudio | Pendente | Nenhum som ou música implementado. |
 | On-line e persistência | Pendente | Fora do MVP; não há backend obrigatório. |
-| Testes automatizados | Implementado | 10 arquivos de teste, 18 suítes e 88 checks passando (`npm test`). |
+| Testes automatizados | Implementado | 12 arquivos de teste, 25 suítes e 110 checks passando (`npm test`). |
 | Publicação | Pendente | Instruções de Render existem; não há URL publicada registrada. |
 | Validação em celular físico | Pendente | Nenhum registro de teste em Android/iOS real. |
 | Licenças de assets | Pendente | Origem/licença do Plasmo ainda não documentada; ver `CREDITS.md`. |
 
 ### O que já é jogável
 
-- Iniciar uma partida contra a CPU em três dificuldades.
+- Iniciar uma partida contra a CPU em três dificuldades no menu rápido.
 - Assistir CPU vs CPU, com controles touch ocultos.
+- Jogar a campanha de 5 fases (melhor de 3 rounds, cronômetro e pontuação), com IA `elite`/`lendario` nas fases finais.
 - Andar, correr, pular, agachar, defender e executar leve, médio, forte e chute.
 - Bloquear golpes altos/médios em pé, médios/baixos agachado, sofrer chip apenas no forte e ser empurrado pelo bloqueio.
 - Esquivar de golpes de chão com o pulo e atravessar o oponente por cima.
@@ -42,8 +43,8 @@ Ainda não é o MVP completo: faltam rounds, cronômetro, resultado, gamepad, á
 
 ### O que ainda falta para o MVP
 
-- Cronômetro, rounds, placar, condição de vitória e tela de resultado.
-- Reinício automático de round e fluxo completo de fim de partida.
+- Save/progressão persistente da campanha, seleção de personagem e desbloqueios (Sable planejada).
+- Balanceamento fino das fases finais com base em playtest real.
 - Gamepad.
 - Áudio e controle de volume.
 - Pausa explícita por perda de foco/aba oculta (hoje há limpeza de input e clamp de delta).
@@ -54,9 +55,9 @@ Ainda não é o MVP completo: faltam rounds, cronômetro, resultado, gamepad, á
 
 ### Verificação desta atualização
 
-Em 2026-11-23:
+Em 2026-11-24:
 
-- `npm test` → **88 checks aprovados**, 18 suítes, 0 falhas.
+- `npm test` → **110 checks aprovados**, 25 suítes, 0 falhas.
 - `vite build` em diretório temporário → **build concluída sem erro**.
 - `sat` consta em `package.json`, mas **não é importado** por nenhum módulo de `src/` ou `tests/`.
 
@@ -151,18 +152,18 @@ O jogador acessa o mesmo endereço web. Não faz parte do MVP criar aplicativos 
 
 - Visão lateral 2D e combate um contra um.
 - Menu inicial sobre a arena, com o jogo congelado até a escolha do modo.
-- Modos **Jogador vs CPU** (`pvc`) e **CPU vs CPU** (`cvc`). No modo espectador, os controles touch ficam ocultos.
-- Cada lutador começa com **100 de vida**.
-- A partida termina quando uma vida chega a zero: o status do HUD muda para `ROUND END` e os inputs dos lutadores são suspensos.
-- Não há cronômetro, contagem de rounds, placar, tela de vitória/derrota nem reinício automático. O botão **REINICIAR** restaura posições e vida.
-- A dificuldade da CPU pode ser trocada no menu ou pelos atalhos `1`, `2` e `3` durante a partida.
+- Modos **Jogador vs CPU** (`pvc`), **CPU vs CPU** (`cvc`) e **Campanha · 5 fases**. No modo espectador, os controles touch ficam ocultos.
+- Na partida rápida, cada lutador começa com **100 de vida**; a partida termina quando uma vida chega a zero e o status muda para `ROUND END`.
+- Na campanha, cada fase define vida máxima, paleta, escala, perfil de IA e tempo de round; a partida é melhor de 3 rounds, com vitória por nocaute ou por maior vida no tempo, pontuação acumulada e overlay de resultado (próxima fase, retry ou reinício da campanha).
+- A dificuldade da CPU pode ser trocada no menu ou pelos atalhos `1`, `2` e `3` durante a partida rápida.
 
-### Formato planejado para o MVP
+### Formato da partida (implementado)
 
-- Partida dividida em rounds, com cronômetro e condição de vitória por nocaute ou por maior vida ao término do tempo.
-- Número de rounds e duração configuráveis, não codificados em vários módulos.
-- Placar de rounds e tela de resultado.
-- Reinício de partida sem recarregar a página.
+- Campanha com 5 fases escalonadas: SENTINELA, VOLT, KRONOS, NÊMESIS e ÔMEGA.
+- Melhor de 3 rounds por fase, cronômetro por round e placar de rounds.
+- Pontuação por round, vida restante, tempo, KO, round perfeito, dano causado e bônus de fase.
+- Tela de resultado com **PRÓXIMA FASE**, **TENTAR NOVAMENTE**, **JOGAR NOVAMENTE** e **VOLTAR AO MENU**.
+- Reinício de round/fase sem recarregar a página; save persistente ainda pendente.
 
 ### Movimentação
 
@@ -246,7 +247,7 @@ Comportamentos implementados:
 - respeitar startup, recovery, hitstun, aterrissagem e estado do próprio personagem;
 - usar pesos de ataque e evitar repetição sem intervalo.
 
-Ainda não há aprendizado, adaptação ao padrão do jogador ou níveis além dos três perfis.
+Ainda não há aprendizado, adaptação ao padrão do jogador ou níveis além dos cinco perfis (`facil`, `medio`, `dificil`, `elite`, `lendario`).
 
 ### Menu, modos e parâmetros de URL
 
@@ -467,7 +468,7 @@ Não há classe de máquina de estados explícita; as prioridades e transições
 
 ### Testes
 
-- 10 arquivos de teste em `tests/` (mais `helpers.mjs`), 18 suítes, 88 checks.
+- 12 arquivos de teste em `tests/` (mais `helpers.mjs`), 25 suítes, 110 checks.
 - Cobertura: loop, input, HUD, defesa, knockback, locomoção, corrida, altura de golpe, efeito de bloqueio, âncoras e integridade dos dados do Plasmo.
 - Os testes são contrato de regressão: mudanças de balanceamento exigem justificativa e atualização explícita dos testes.
 - Não há testes de navegador, DOM real, touch físico ou e2e.
@@ -515,7 +516,8 @@ Não há classe de máquina de estados explícita; as prioridades e transições
 ### Extras já implementados além do MVP original
 
 - Modo espectador CPU vs CPU.
-- Três dificuldades de IA.
+- Campanha de 5 fases com rounds, cronômetro e pontuação.
+- Cinco perfis de IA (três no menu rápido; `elite`/`lendario` na campanha).
 - Corrida por duplo-toque/Shift.
 - Tela cheia, aviso de retrato e overlay de debug.
 - Testes automatizados de regressão.
@@ -544,8 +546,8 @@ O MVP só deve ser considerado concluído quando todos os critérios abaixo esti
 | 4 | Ataques com janelas distintas de startup, active e recovery. | Implementado | `ATTACKS` e `Fighter.update`; testes de defesa/altura/knockback. |
 | 5 | Hitbox só causa dano na janela ativa e não repete dano. | Implementado | Checagem por `elapsed` + `attackHit`; colisão própria. |
 | 6 | Colisões funcionam com os personagens em qualquer direção. | Implementado | Alcance por distância absoluta; testes de espelhamento/face. |
-| 7 | IA se aproxima, ataca e defende de forma básica. | Implementado | `CPUController`; três perfis; testes de corrida/alcance. |
-| 8 | Vida, cronômetro, rounds e resultado atualizados corretamente. | Parcial | Vida e `ROUND END`; timer/rounds/placar/resultado ausentes. |
+| 7 | IA se aproxima, ataca e defende de forma básica. | Implementado | `CPUController`; cinco perfis; testes de corrida/alcance. |
+| 8 | Vida, cronômetro, rounds e resultado atualizados corretamente. | Implementado | Campanha: fase/round, timer, placar e overlay de resultado; partida rápida: vida e `ROUND END`. |
 | 9 | Mobile mantém direção + ataque simultâneos, inclusive outros comandos. | Parcial | Multi-touch por `pointerId`; falta validação em aparelho real. |
 | 10 | Redimensionar/girar não distorce a arena nem esconde comandos. | Parcial | `ResizeObserver`, letterbox, aviso de retrato; falta validação física. |
 | 11 | Alvos de toque confortáveis, com feedback e safe areas. | Parcial | Primários ~44–73 px; utilitários ~26–34 px; safe areas implementadas. |
@@ -567,9 +569,9 @@ O MVP só deve ser considerado concluído quando todos os critérios abaixo esti
 | Colisão | Regras próprias em 1D + altura + postura | Se hurtboxes/hitboxes evoluírem para polígonos convexos. |
 | SAT.js | Declarado, não integrado | Quando houver colisão poligonal real; ver seção 5. |
 | Loop | Passo fixo 1/60 s + render por `requestAnimationFrame` | Após profiling e testes de latência. |
-| Partida | Vida única de 100, sem timer/rounds | Ao implementar o formato completo de rounds do MVP. |
-| Modos | `pvc` e `cvc` | Se houver seleção de personagem/arenas. |
-| Dificuldade | Três perfis (`facil`, `medio`, `dificil`) | Se dados de jogo indicarem necessidade de mais níveis. |
+| Partida | Campanha: melhor de 3, timer e pontuação; partida rápida: vida única | Se o playtest indicar outro formato. |
+| Modos | Campanha de 5 fases, `pvc` e `cvc` | Se houver seleção de personagem/arenas. |
+| Dificuldade | Cinco perfis (`facil`, `medio`, `dificil`, `elite`, `lendario`) | Se dados de jogo indicarem necessidade de mais níveis. |
 | Áudio | Nenhum | Ao implementar feedback sonoro com respeito a autoplay. |
 | Multiplayer | Não no MVP | Após validar jogo local e definir modelo autoritativo. |
 | Hospedagem | Render Static Site planejado | Ao adicionar serviços de backend. |
@@ -578,7 +580,7 @@ O MVP só deve ser considerado concluído quando todos os critérios abaixo esti
 
 ## 11. Limitações conhecidas e dívidas técnicas
 
-1. **Rounds e tempo:** não há cronômetro, contagem de rounds, placar, vitória/derrota ou rematch automático.
+1. **Persistência da campanha:** o progresso entre fases e a pontuação não são salvos; recarregar a página reinicia a campanha. Não há seleção de personagem/desbloqueios.
 2. **Gamepad:** não implementado.
 3. **Áudio:** não implementado.
 4. **Pausa/visibilidade:** aba oculta não pausa explicitamente; há limpeza de input e clamp de delta.
@@ -592,9 +594,9 @@ O MVP só deve ser considerado concluído quando todos os critérios abaixo esti
 12. **Scripts de arte:** `extract-plasmo.ps1` e `measure-anchors.ps1` dependem de PowerShell/Windows e têm caminhos fixos da máquina do autor.
 13. **Testes:** apenas unitários em Node; não há testes de DOM real, touch físico ou e2e.
 14. **Deploy:** sem publicação no Render.
-15. **Dependências:** `sat` instalado sem uso; `package.json` tem alteração local de `allowScripts` ainda não commitada.
-16. **Tela de resultado:** o HUD mostra `ROUND END`, mas não há vencedor, estatísticas ou reinício de partida.
-17. **Rótulos fixos no HTML:** o HUD exibe `ROUND 01` e a legenda `SIMULAÇÃO DE MOVIMENTO` no `index.html`, embora não exista sistema de rounds e o jogo já tenha combate. Corrigir os rótulos no HTML está fora do escopo desta atualização documental.
+15. **Dependências:** `sat` instalado sem uso.
+16. **Tela de resultado:** a campanha tem overlay de resultado com estatísticas; a partida rápida segue só com `ROUND END` (sem vencedor/estatísticas) por design atual.
+17. **Rótulos do HUD:** `index.html` agora expõe ids (`round-label`, `timer`, `score`) preenchidos pelo `HUD`; a legenda decorativa `SIMULAÇÃO DE MOVIMENTO` na arena permanece e pode ser trocada por texto de ambientação final.
 
 ## 12. Fontes técnicas de referência
 

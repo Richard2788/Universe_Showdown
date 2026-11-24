@@ -7,7 +7,7 @@ Formato inspirado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/)
 
 ### Pendente
 
-- Cronômetro, rounds, placar, resultado e rematch.
+- Progresso persistente da campanha (save), seleção de personagem e desbloqueios (Sable planejada, entrega própria).
 - Gamepad.
 - Áudio.
 - Pausa explícita em `visibilitychange`/perda de foco.
@@ -15,6 +15,28 @@ Formato inspirado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/)
 - Validação em aparelho Android/iOS físico.
 - Publicação no Render.
 - Licença do código e origem/licença dos assets.
+
+## [2026-11-24] — Campanha de 5 fases: rounds, cronômetro e pontuação
+
+### Adicionado
+
+- Modo **CAMPANHA · 5 FASES** no menu, com fases escalonadas — SENTINELA, VOLT, KRONOS, NÊMESIS e ÔMEGA: vida, paleta, escala do oponente, perfil de IA e tempo de round crescem fase a fase (`src/config/match.js`).
+- `src/game/MatchManager.js`: regras puras (sem DOM/`Fighter`) de melhor de 3, cronômetro por round, fim por nocaute ou tempo, pontuação (round, vida restante, tempo, KO, round perfeito, dano causado e bônus de fase) e progressão entre fases.
+- HUD de campanha: fase/round, cronômetro com alerta aos 10 s e pontuação com zeros à esquerda. A partida rápida (`pvc`/`cvc`) continua sem relógio/placar.
+- Overlay de resultado (vitória, derrota e fim da campanha) com estatísticas e ações **PRÓXIMA FASE**, **TENTAR NOVAMENTE**, **JOGAR NOVAMENTE** e **VOLTAR AO MENU**.
+- Banners centrais `ROUND`, `LUTE!` e `K.O.`/pontuação desenhados no canvas.
+- Perfis de IA `elite` e `lendario` para as fases 4 e 5 (não aparecem no menu de partida rápida).
+- `Fighter` aceita `maxHealth` (oponentes mais fortes mantêm a barra em 100% quando cheios).
+
+### Alterado
+
+- `Game` ganhou o modo `campanha` (`startMatch`, `continueCampaign`, `retryPhase`, `restartCampaign`, `abandonCampaign`), banners e `snapshot()`; `reset()` foi separado em `resetFighters()`, que reaproveita os animadores existentes (sem recriar canvas por round).
+- O oponente da campanha usa um atlas placeholder por fase (cor da paleta), com cache para não regenerar a cada round.
+- `tests/match.test.mjs` (10 checks) cobre configuração das fases, rounds/cronômetro, pontuação, melhor de 3, derrota/retry e fim da campanha.
+
+### Verificado
+
+- `npm test`: **110 checks aprovados**, 25 suítes, 0 falhas; `npm run build` concluída sem erro.
 
 ## [2026-11-24] — Animação de block: uma reação por bloqueio
 

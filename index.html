@@ -16,7 +16,7 @@
       <section class="game-panel" aria-label="Arena de combate">
         <div class="match-hud">
           <div class="fighter-info player-info"><span id="player-label">PLAYER 01</span><strong id="player-health-label">100</strong><div class="health-track"><i id="player-health"></i></div></div>
-          <div class="round-info"><span>ROUND</span><strong>01</strong><small id="status">READY</small></div>
+          <div class="round-info" id="round-info"><span id="round-label">ROUND</span><strong id="timer" hidden>60</strong><small id="status">READY</small><em id="score" hidden>000000</em></div>
           <div class="fighter-info enemy-info"><span id="enemy-label">CPU</span><strong id="enemy-health-label">100</strong><div class="health-track"><i id="enemy-health"></i></div></div>
         </div>
         <div class="arena-wrap">
@@ -56,12 +56,25 @@
             <button type="button" data-diff="dificil">DIFÍCIL</button>
           </div>
           <p class="menu-hint">CADA DIFICULDADE LIBERA MAIS GOLPES E REFLEXOS MAIS RÁPIDOS</p>
-          <button type="button" class="menu-start primary" id="start-pvc">JOGAR · PLAYER vs CPU</button>
+          <div class="menu-phases" id="menu-phases" aria-label="Fases da campanha"></div>
+          <button type="button" class="menu-start primary" id="start-campaign">CAMPANHA · 5 FASES</button>
+          <button type="button" class="menu-start" id="start-pvc">JOGAR · PLAYER vs CPU</button>
           <button type="button" class="menu-start" id="start-cvc">ASSISTIR · CPU vs CPU</button>
           <button type="button" class="menu-start menu-fs" id="fullscreen-menu" aria-label="Tela cheia" aria-pressed="false" data-fullscreen="false"><svg class="fs-enter" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3H5a2 2 0 0 0-2 2v3M16 21h3a2 2 0 0 0 2-2v-3M3 16l3-3M21 8l-3 3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><svg class="fs-exit" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h3a2 2 0 0 1 2 2v3M21 21h-3a2 2 0 0 1-2-2v-3M17 8l3 3M7 16l-3-3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>TELA CHEIA</span></button>
         </div>
       </div>
     </main>
+    <div class="result-overlay" id="result-overlay" aria-label="Resultado da fase">
+      <div class="result-card">
+        <span class="result-kicker" id="result-kicker">FASE CONCLUÍDA</span>
+        <h2 id="result-title">VITÓRIA</h2>
+        <p class="result-sub" id="result-sub"></p>
+        <div class="result-stats" id="result-stats"></div>
+        <div class="result-score"><span>PONTUAÇÃO TOTAL</span><strong id="result-score">000000</strong></div>
+        <button id="result-primary" class="menu-start primary" type="button">PRÓXIMA FASE</button>
+        <button id="result-menu" class="menu-start" type="button">VOLTAR AO MENU</button>
+      </div>
+    </div>
     <div id="error-overlay" style="display:none;position:fixed;inset:0;z-index:9999;background:#1a0a0a;color:#ff6666;font-family:monospace;padding:20px;overflow:auto;">
       <h2 style="color:#ff3333;margin-top:0;">ERRO DE CARREGAMENTO</h2>
       <pre id="error-message" style="white-space:pre-wrap;font-size:12px;line-height:1.4;"></pre>

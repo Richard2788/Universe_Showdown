@@ -21,13 +21,13 @@
 | B. Protótipo mobile de movimentação | P0 | Arena, lutadores provisórios, direcional e multi-touch. | Implementada; validação física pendente |
 | C. Fundação de combate | P0 | Estados, dados de ataques, hitboxes/hurtboxes e colisão. | Parcial: SAT.js não integrado |
 | D. Combate funcional | P0 | Dano, bloqueio, stun, pushback, depuração e IA. | Implementado; falta validação física |
-| E. Partida completa local | P0 | Vida, timer, rounds, resultado, reinício e IA. | Parcial: sem timer/rounds/resultado |
+| E. Partida completa local | P0 | Vida, timer, rounds, resultado, reinício e IA. | Implementada na campanha (5 fases, timer, rounds, pontuação, resultado); partida rápida sem rounds |
 | F. Adaptação desktop | P1 | Teclado e gamepad via InputManager compartilhado. | Teclado pronto; gamepad pendente |
 | G. Polimento e publicação | P0/P1 | Build, acessibilidade, desempenho, testes e Render. | Testes/build prontos; deploy pendente |
 | H. Conteúdo e expansão | P2 | Novos personagens, cenários e modos. | Não iniciada |
 | I. Multiplayer online | P2 | Partidas online com validação no servidor. | Não iniciada |
 
-## 3. Estado de implementação (2026-11-23)
+## 3. Estado de implementação (2026-11-24)
 
 ### O que está pronto
 
@@ -37,18 +37,20 @@
 - [x] Dois lutadores provisórios e movimentação touchscreen/teclado.
 - [x] Combate com quatro golpes, janelas de startup/active/recovery, dano, chip, knockback e hitstun.
 - [x] Defesa direcional em pé/agachado, blockstun, empurrão e efeito visual de bloqueio.
-- [x] IA com três dificuldades, reação, aproximação, corrida, esquiva, bloqueio e punição.
+- [x] IA com cinco perfis (três no menu; `elite`/`lendario` na campanha), reação, aproximação, corrida, esquiva, bloqueio e punição.
 - [x] Corrida por duplo-toque/Shift, pulo atravessável, aterrissagem e separação de corpos.
-- [x] Menu inicial, modos `pvc`/`cvc`, seleção de dificuldade, tela cheia e aviso de retrato.
+- [x] Menu inicial com campanha de 5 fases, modos `pvc`/`cvc`, seleção de dificuldade, tela cheia e aviso de retrato.
+- [x] Campanha com rounds (melhor de 3), cronômetro, pontuação, progressão de fase e tela de resultado.
 - [x] Arte real do Plasmo por estado, âncoras por frame e fallback placeholder para o oponente.
-- [x] HUD em DOM com vida, rótulos, status `READY`/`ROUND END` e reinício.
-- [x] Testes automatizados: 10 arquivos de teste, 18 suítes, 88 checks.
+- [x] HUD em DOM com vida, rótulos e status; na campanha, fase/round, timer e pontuação.
+- [x] Testes automatizados: 12 arquivos de teste, 25 suítes, 110 checks.
 - [x] Build de produção verificada sem erros.
 
 ### O que falta para o MVP
 
-- [ ] Cronômetro, rounds, placar e tela de resultado.
-- [ ] Reinício automático de round/partida.
+- [x] Cronômetro, rounds, placar e tela de resultado (campanha de 5 fases).
+- [x] Reinício automático de round/partida na campanha (próxima fase, retry e restart); partida rápida usa o botão REINICIAR.
+- [ ] Save/progressão persistente da campanha e seleção de personagem/desbloqueios.
 - [ ] Gamepad.
 - [ ] Áudio e controle de volume.
 - [ ] Pausa explícita em `visibilitychange`/perda de foco.
@@ -139,13 +141,13 @@
 - [x] Implementar bloqueio direcional básico.
 - [x] Definir dano bloqueado (chip apenas no forte) e reação de bloqueio.
 - [x] Criar barra de vida.
-- [ ] Criar cronômetro.
-- [ ] Implementar fim do round por nocaute ou tempo.
-- [ ] Implementar placar de rounds e resultado final.
-- [ ] Adicionar reinício completo de partida.
+- [x] Criar cronômetro.
+- [x] Implementar fim do round por nocaute ou tempo.
+- [x] Implementar placar de rounds e resultado final.
+- [x] Adicionar reinício completo de partida.
 - [x] Adicionar botão de reinício dos lutadores.
 
-**Critério de aceite:** uma partida pode começar, terminar e ser reiniciada sem recarregar a página. **Status: parcial — início, KO e reset manual existem; timer/rounds/resultado não.**
+**Critério de aceite:** uma partida pode começar, terminar e ser reiniciada sem recarregar a página. **Status: implementado na campanha de 5 fases; a partida rápida mantém vida única + `ROUND END` e reinício manual por design.**
 
 #### P0 — IA inicial
 
@@ -306,7 +308,7 @@
 ## 6. Dívidas técnicas e riscos
 
 1. **SAT.js sem uso:** o pacote está instalado, mas a colisão é própria. Decisão atual: **não integrar** até existir hitbox poligonal. Risco: dependência morta e documentação anterior incorreta.
-2. **Partida incompleta:** sem timer, rounds, placar, resultado e rematch automático.
+2. **Persistência da campanha:** o progresso entre fases não é salvo; recarregar a página reinicia a campanha. A partida rápida continua sem rounds/timer por design, e o resultado da campanha fica só em memória.
 3. **Gamepad ausente.**
 4. **Áudio ausente.**
 5. **Pausa/visibilidade:** aba oculta não pausa a simulação explicitamente.

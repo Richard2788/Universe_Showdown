@@ -54,10 +54,12 @@ export class Fighter {
    * @param {number} [options.renderScale] escala visual do sprite (1 = padrão)
    * @param {number} [options.hurtboxHalfWidth] meia-largura da hurtbox (px, mundo)
    * @param {number} [options.hurtboxHeight] altura da hurtbox (px, mundo)
+   * @param {number} [options.maxHealth] vida máxima (padrão 100; fases usam mais)
    */
   constructor(x, color, face, options = {}) {
     this.x = x; this.y = 0; this.vy = 0; this.color = color; this.face = face;
-    this.health = 100; this.attack = null; this.attackName = null;
+    this.maxHealth = options.maxHealth ?? 100;
+    this.health = this.maxHealth; this.attack = null; this.attackName = null;
     this.attackHit = false; this.crouch = false; this.hitTimer = 0;
     this.jumpBuffer = 0; // janela em que um comando de pulo ainda vale ao aterrissar
     this.landingTimer = 0; // recuperação de aterrissagem (estado 'jump' em solo)

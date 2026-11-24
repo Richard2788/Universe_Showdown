@@ -13,6 +13,7 @@ export class CanvasRenderer {
     this.enemyLabel = 'CPU';
     this.debug = false;
     this.usesPlaceholder = false;
+    this.banner = null; // anúncio central (ROUND/LUTE/K.O.) da campanha
   }
 
   setAnimator(fighter, animator) {
@@ -36,6 +37,36 @@ export class CanvasRenderer {
     c.strokeStyle = '#53647c'; c.globalAlpha = .6; c.beginPath(); c.moveTo(0, 420); c.lineTo(w, 420); c.stroke(); c.globalAlpha = 1;
     this.drawScenery();
     for (const [fighter, label] of [[player, this.playerLabel], [enemy, this.enemyLabel]]) this.drawFighter(fighter, label);
+    if (this.banner) this.drawBanner();
+  }
+
+  /**
+   * Faixa central de anúncio (ROUND, LUTE!, K.O., bônus de pontos).
+   * O texto é definido pelo Game no passo fixo; aqui só desenhamos.
+   */
+  drawBanner() {
+    const c = this.ctx, w = this.width, h = this.height;
+    const { text, sub, tone } = this.banner;
+    const color = tone === 'win' ? '#86f1d2'
+      : tone === 'lose' ? '#ff638c'
+        : tone === 'fight' ? '#ffd866'
+          : '#51e3e8';
+    c.save();
+    c.fillStyle = 'rgba(9,13,24,.84)';
+    c.fillRect(0, h / 2 - 76, w, 116);
+    c.fillStyle = color;
+    c.fillRect(0, h / 2 - 76, w, 3);
+    c.fillRect(0, h / 2 + 37, w, 3);
+    c.textAlign = 'center';
+    c.fillStyle = '#f4f6ff';
+    c.font = '800 44px Inter, ui-sans-serif, system-ui, sans-serif';
+    c.fillText(text, w / 2, h / 2 - 2);
+    if (sub) {
+      c.fillStyle = color;
+      c.font = '700 13px ui-monospace, SFMono-Regular, monospace';
+      c.fillText(sub, w / 2, h / 2 + 26);
+    }
+    c.restore();
   }
 
   /**

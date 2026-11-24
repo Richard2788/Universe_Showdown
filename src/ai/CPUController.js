@@ -58,6 +58,37 @@ export const DIFFICULTIES = {
     allowedAttacks: ['lightAttack', 'mediumAttack', 'heavyAttack', 'kick'],
     weights: { lightAttack: 3, mediumAttack: 2, heavyAttack: 1.2, kick: 1.5 },
   },
+  // ── Perfis das fases 4 e 5 da campanha ──────────────────────────────
+  // Não aparecem no menu de partida rápida: existem para escalar a
+  // dificuldade além do "difícil" sem tocar nos perfis já validados.
+  elite: {
+    label: 'ELITE',
+    reaction: [0.06, 0.12],
+    think: [0.08, 0.14],
+    aggression: 0.88,
+    dodgeChance: 0.7,
+    blockChance: 0.6,
+    pauseChance: 0.04,
+    jumpChance: 0.14,
+    runDistance: 120,
+    punish: true,
+    allowedAttacks: ['lightAttack', 'mediumAttack', 'heavyAttack', 'kick'],
+    weights: { lightAttack: 3, mediumAttack: 2, heavyAttack: 1.8, kick: 1.6 },
+  },
+  lendario: {
+    label: 'LENDÁRIO',
+    reaction: [0.03, 0.08],
+    think: [0.05, 0.1],
+    aggression: 0.95,
+    dodgeChance: 0.8,
+    blockChance: 0.72,
+    pauseChance: 0.02,
+    jumpChance: 0.16,
+    runDistance: 110,
+    punish: true,
+    allowedAttacks: ['lightAttack', 'mediumAttack', 'heavyAttack', 'kick'],
+    weights: { lightAttack: 3, mediumAttack: 2, heavyAttack: 2.2, kick: 1.8 },
+  },
 };
 
 export class CPUController {

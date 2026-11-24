@@ -9,6 +9,7 @@ import { InputManager } from '../core/InputManager.js';
 import { RunDetector } from '../core/RunDetector.js';
 import { GameLoop } from '../core/GameLoop.js';
 import { HUD } from '../ui/HUD.js';
+import { MatchManager } from './MatchManager.js';
 import {
   WIDTH, HEIGHT, STEP, MAX_FRAME_DELTA, STAGE_MARGIN,
   PLAYER_SPAWN_X, ENEMY_SPAWN_X, isDebugEnabled,
@@ -32,6 +33,13 @@ export class Game {
     });
     this.enemy = new Fighter(ENEMY_SPAWN_X, '#ff638c', -1);
     this.setupAnimators();
+    // ── Campanha: rounds, cronômetro e pontuação ──
+    // O MatchManager não conhece DOM/Fighter: o Game informa a vida no
+    // snapshot e reage aos eventos (roundStart/roundEnd/phaseEnd).
+    this.enemyAtlasCache = new Map();
+    this.bannerTimer = 0;
+    this.onMatchEvent = null;
+    this.match = new MatchManager({ onEvent: (event) => this.handleMatchEvent(event) });
     this.frame = 0;
     this.resizeObserver = new ResizeObserver(() => this.resize());
     this.resizeObserver.observe(canvas);
@@ -132,14 +140,29 @@ export class Game {
   update(dt) {
     if (this.mode === 'menu') return; // congelado atrás do menu de início
     this.frame++;
+
+    // Banner central (ROUND / LUTE / K.O.): vive no renderer, mas o tempo
+    // avança no passo fixo, como todo o resto da simulação.
+    if (this.bannerTimer > 0) {
+      this.bannerTimer -= dt;
+      if (this.bannerTimer <= 0) this.renderer.banner = null;
+    }
+
+    const campaign = this.mode === 'campanha';
+    // A campanha avança cronômetro/transições ANTES de decidir as ações:
+    // se o tempo zerou neste frame, o round já entra em `roundEnd`.
+    if (campaign) this.match.update(dt, this.snapshot());
+    const fighting = !campaign || this.match.state === 'fighting';
+
     const actions = this.input.actions;
     // Quem controla cada lutador depende do modo:
-    //   pvc → player humano (teclado/touch) vs CPU
-    //   cvc → CPU vs CPU (espectador)
+    //   pvc       → player humano (teclado/touch) vs CPU
+    //   cvc       → CPU vs CPU (espectador)
+    //   campanha  → player humano vs CPU da fase
     const ko = this.player.health <= 0 || this.enemy.health <= 0;
-    let playerActions = actions;   // modo pvc: jogador humano (teclado/touch)
-    let enemyActions = {};         // pvc: controlado pela CPU abaixo
-    if (this.mode === 'pvc') {
+    let playerActions = actions;   // modo pvc/campanha: jogador humano
+    let enemyActions = {};         // pvc/campanha: controlado pela CPU abaixo
+    if (this.mode === 'pvc' || campaign) {
       // Corrida do jogador: duplo-toque na direção (RunDetector) OU a tecla
       // Shift (`actions.run`, vindo do KEY_MAP). A CPU (cvc) já emite `run`.
       const run = this.runDetector.update(actions, dt) || Boolean(actions.run);
@@ -150,7 +173,8 @@ export class Game {
       playerActions = this.cpuPlayer.update(dt);
       enemyActions = this.cpuEnemy.update(dt);
     }
-    if (ko) { playerActions = {}; enemyActions = {}; } // round encerrado
+    // Round encerrado, intro/resultado da campanha ou KO: sem ações.
+    if (ko || !fighting) { playerActions = {}; enemyActions = {}; }
     this.player.update(dt, playerActions, this.enemy);
     this.enemy.update(dt, enemyActions, this.player);
     // Animação avança no MESMO passo fixo da simulação (não no render)
@@ -168,7 +192,8 @@ export class Game {
     }
     // Estado interno da IA (mostrado no ?debug=1).
     this.renderer.cpuStates.set(this.player, this.mode === 'cvc' ? this.cpuPlayer.stateName : null);
-    this.renderer.cpuStates.set(this.enemy, this.mode === 'pvc' ? this.cpuEnemy.stateName : null);
+    this.renderer.cpuStates.set(this.enemy,
+      this.mode === 'pvc' || campaign ? this.cpuEnemy.stateName : null);
     // Separação de corpos e virada de face (lógica pura em ./physics.js).
     // Quem aterrissa EM CIMA do oponente fixa o x do de baixo: a separação
     // empurra só o que está por cima (evita deslizar o oponente na aterrissagem).
@@ -180,6 +205,17 @@ export class Game {
     updateFaces(this.player, this.enemy);
     this.player.health = Math.max(0, this.player.health);
     this.enemy.health = Math.max(0, this.enemy.health);
+
+    // Nocaute da campanha: o MatchManager decide round/fase e emite eventos.
+    // O duplo KO é empate (ambos levam o round) para nunca travar a partida.
+    if (campaign && this.match.state === 'fighting') {
+      const playerDead = this.player.health <= 0;
+      const enemyDead = this.enemy.health <= 0;
+      if (playerDead || enemyDead) {
+        const winner = playerDead && enemyDead ? 'draw' : enemyDead ? 'player' : 'enemy';
+        this.match.notifyKO(winner, this.snapshot());
+      }
+    }
   }
   render() {
     this.ctx.setTransform(1, 0, 0, 1, 0, 0);
@@ -187,30 +223,159 @@ export class Game {
     this.ctx.setTransform(this.scale, 0, 0, this.scale, this.offsetX, this.offsetY);
     this.renderer.draw(this.player, this.enemy, this.frame);
     this.hud.sync(this.player, this.enemy);
+    if (this.mode === 'campanha') this.hud.syncMatch(this.match);
   }
-  /** Inicia o round no modo escolhido ('pvc' = jogador vs CPU, 'cvc' = CPU vs CPU). */
+  /** Snapshot da vida atual para o MatchManager (campanha). */
+  snapshot() {
+    return {
+      playerHealth: this.player.health,
+      enemyHealth: this.enemy.health,
+      playerMaxHealth: this.player.maxHealth ?? 100,
+      enemyMaxHealth: this.enemy.maxHealth ?? 100,
+    };
+  }
+
+  /** Inicia a partida no modo escolhido (pvc, cvc ou campanha). */
   startMatch(mode) {
     this.mode = mode;
+    this.input.clear();
+    this.previousMode = null;
+    this.renderer.banner = null;
+    this.bannerTimer = 0;
+
+    if (mode === 'campanha') {
+      // A dificuldade e o oponente são definidos por fase. A dificuldade
+      // escolhida no menu continua valendo para a partida rápida.
+      this.hud.setCampaign(true);
+      this.renderer.playerLabel = 'PLAYER 01';
+      this.runDetector.reset();
+      this.match.startCampaign();
+      return;
+    }
+
+    this.hud.setCampaign(false);
     this.cpuPlayer.setDifficulty(this.difficulty);
     this.cpuEnemy.setDifficulty(this.difficulty);
-    this.input.clear();
-    this.reset();
+    this.resetEnemyForQuickMatch();
+    this.resetFighters();
+    this.frame = 0;
+    this.runDetector.reset();
     const label = DIFFICULTIES[this.difficulty].label;
     this.renderer.playerLabel = mode === 'cvc' ? 'CPU 01' : 'YOU';
     this.renderer.enemyLabel = mode === 'cvc' ? 'CPU 02' : 'CPU';
     this.hud.setMatchLabels(mode, label);
   }
 
+  /** Eventos emitidos pelo MatchManager (rounds/fases da campanha). */
+  handleMatchEvent(event) {
+    switch (event.type) {
+      case 'phaseStart':
+        this.applyPhase(event.phase, event.phaseIndex, event.phaseCount);
+        break;
+      case 'roundStart':
+        this.resetFighters();
+        this.input.clear();
+        this.runDetector.reset();
+        this.showBanner(
+          `ROUND ${event.roundNumber}`,
+          `${event.phase.name} · ${event.playerWins} × ${event.enemyWins}`,
+          1.2,
+          'round',
+        );
+        break;
+      case 'fight':
+        this.showBanner('LUTE!', '', 0.8, 'fight');
+        break;
+      case 'roundEnd': {
+        const draw = event.winner === 'draw';
+        const won = event.winner === 'player';
+        const title = event.ko
+          ? (won ? 'K.O.!' : draw ? 'DUPLO K.O.' : 'NOCAUTE')
+          : (won ? 'TEMPO · VITÓRIA' : draw ? 'TEMPO · EMPATE' : 'TEMPO ESGOTADO');
+        this.showBanner(title, `+${event.points} PTS`, 1.8, won ? 'win' : 'lose');
+        break;
+      }
+      case 'phaseEnd':
+      case 'campaignEnd':
+        this.renderer.banner = null;
+        this.bannerTimer = 0;
+        this.onMatchEvent?.(event);
+        break;
+    }
+  }
+
+  /** Anúncio central desenhado no canvas (ROUND, LUTE!, K.O.). */
+  showBanner(text, sub = '', duration = 1.2, tone = 'round') {
+    this.renderer.banner = { text, sub, tone };
+    this.bannerTimer = duration;
+  }
+
+  /** Configura o oponente e o HUD para a fase atual da campanha. */
+  applyPhase(phase, phaseIndex, phaseCount) {
+    this.enemy.maxHealth = phase.health;
+    this.enemy.health = phase.health;
+    this.enemy.color = phase.color;
+    this.enemy.renderScale = phase.renderScale ?? 1;
+    this.enemy.hurtbox = {
+      halfWidth: Math.round(35 * this.enemy.renderScale),
+      height: Math.round(120 * this.enemy.renderScale),
+    };
+
+    const animator = this.fighterAnimators.get(this.enemy);
+    if (animator) {
+      animator.atlas = this.enemyAtlas(phase);
+      animator.setState('idle');
+      animator.frameIndex = 0;
+      animator.timeInFrame = 0;
+      animator.finished = false;
+    }
+
+    this.cpuEnemy.setDifficulty(phase.ai);
+    this.renderer.playerLabel = 'PLAYER 01';
+    this.renderer.enemyLabel = phase.name;
+    this.hud.setCampaign(true);
+    this.hud.setCampaignLabels(phase, phaseIndex, phaseCount);
+    this.hud.setTimer(phase.timeLimit);
+    this.hud.setScore(this.match.score);
+  }
+
+  /** Atlas placeholder por fase (mesmo desenho, cor do personagem diferente). */
+  enemyAtlas(phase) {
+    if (!this.enemyAtlasCache.has(phase.id)) {
+      this.enemyAtlasCache.set(phase.id, buildPlaceholderAtlas(phase.color));
+    }
+    return this.enemyAtlasCache.get(phase.id);
+  }
+
+  /** Restaura o oponente padrão ao sair da campanha para uma partida rápida. */
+  resetEnemyForQuickMatch() {
+    this.enemy.maxHealth = 100;
+    this.enemy.color = '#ff638c';
+    this.enemy.renderScale = 1;
+    this.enemy.hurtbox = { halfWidth: 35, height: 120 };
+    const animator = this.fighterAnimators.get(this.enemy);
+    if (!animator) return;
+    if (!this.enemyAtlasCache.has('default')) {
+      this.enemyAtlasCache.set('default', buildPlaceholderAtlas('#ff638c'));
+    }
+    animator.atlas = this.enemyAtlasCache.get('default');
+    animator.setState('idle');
+    animator.frameIndex = 0;
+    animator.timeInFrame = 0;
+    animator.finished = false;
+  }
+
   /** Volta ao menu de início (congela a simulação; o render continua). */
   openMenu() {
-    if (this.previousMode === null) this.previousMode = this.mode;
+    if (this.mode !== 'menu') this.previousMode = this.mode;
     this.mode = 'menu';
   }
 
-  /** Fecha o menu e retorna ao modo anterior (pvc / cvc). */
+  /** Fecha o menu e retorna ao modo anterior (pvc / cvc / campanha). */
   closeMenu() {
     this.mode = this.previousMode || 'pvc';
     this.previousMode = null;
+    this.hud.setCampaign(this.mode === 'campanha');
     this.runDetector.reset(); // não herda o duplo-toque de antes do menu
   }
 
@@ -219,6 +384,8 @@ export class Game {
     if (!DIFFICULTIES[name]) return;
     this.difficulty = name;
     this.cpuPlayer.setDifficulty(name);
+    // Na campanha o perfil do oponente é definido pela fase.
+    if (this.mode === 'campanha') return;
     this.cpuEnemy.setDifficulty(name);
     if (this.mode !== 'menu') {
       // Atualiza o rótulo do HUD sem interromper o round.
@@ -226,14 +393,55 @@ export class Game {
     }
   }
 
-  reset() {
+  // ── Controles da campanha (chamados pela tela de resultado) ──────────
+  /** Avança após uma fase vencida (ou repete a fase perdida). */
+  continueCampaign() {
+    if (this.mode !== 'campanha') return false;
+    this.renderer.banner = null;
+    this.bannerTimer = 0;
+    return this.match.continuePhase();
+  }
+
+  /** Repete a fase atual restaurando a pontuação do início dela. */
+  retryPhase() {
+    if (this.mode !== 'campanha') return false;
+    this.renderer.banner = null;
+    this.bannerTimer = 0;
+    return this.match.retryPhase();
+  }
+
+  /** Reinicia a campanha inteira (fase 1, pontuação zerada). */
+  restartCampaign() {
+    if (this.mode !== 'campanha') return false;
+    this.renderer.banner = null;
+    this.bannerTimer = 0;
+    this.match.restartCampaign();
+    return true;
+  }
+
+  /** Abandona a campanha e volta ao menu (a tela de resultado fecha). */
+  abandonCampaign() {
+    if (this.mode !== 'campanha') return;
+    this.match.abort();
+    this.hud.setCampaign(false);
+    this.renderer.banner = null;
+    this.bannerTimer = 0;
+    // Deixa uma partida rápida limpa pronta atrás do menu: fechar o menu
+    // depois de abandonar não pode retomar a fase com a vida zerada.
+    this.startMatch('pvc');
+    this.mode = 'menu';
+    this.previousMode = 'pvc';
+  }
+
+  /** Reposiciona os lutadores e restaura a vida máxima de cada um. */
+  resetFighters() {
     // Reutiliza os lutadores existentes: evita acúmulo de entradas órfãs
     // no Map `animators` do CanvasRenderer e mantém os animadores válidos.
     for (const [fighter, animator] of this.fighterAnimators) {
       fighter.x = fighter === this.player ? PLAYER_SPAWN_X : ENEMY_SPAWN_X;
       fighter.y = 0; fighter.vy = 0;
       fighter.face = fighter === this.player ? 1 : -1;
-      fighter.health = 100;
+      fighter.health = fighter.maxHealth ?? 100;
       fighter.attack = null; fighter.attackName = null;
       fighter.attackHit = false; fighter.crouch = false; fighter.hitTimer = 0;
       fighter.jumpBuffer = 0; fighter.landingTimer = 0; fighter.walking = false;
@@ -247,6 +455,16 @@ export class Game {
       animator.timeInFrame = 0;
       animator.finished = false;
     }
+  }
+
+  reset() {
+    // Na campanha o botão REINICIAR repete a fase (ou a campanha no final).
+    if (this.mode === 'campanha' && this.match.isActive) {
+      if (this.match.state === 'campaignEnd') this.match.restartCampaign();
+      else this.match.restartPhase();
+      return;
+    }
+    this.resetFighters();
     this.frame = 0;
     this.runDetector.reset(); // round novo: duplo-toque do round anterior não vale
   }

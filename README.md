@@ -2,9 +2,9 @@
 
 Jogo de luta tradicional em visão lateral, concebido sob a abordagem **Mobile First** e executado diretamente no navegador. A experiência principal é projetada primeiro para celulares, com combate preferencialmente em orientação horizontal e controles touchscreen multi-touch. A mesma aplicação é adaptada para computadores com teclado.
 
-> **Status:** protótipo jogável (alpha), atualizado em **2026-11-23**.
-> Combate, defesa, IA, movimentação, animação do Plasmo, controles touch/teclado e modos Jogador vs CPU / CPU vs CPU estão implementados.
-> Rounds, cronômetro, resultado, gamepad, áudio, validação em celular físico, licenças de assets e publicação no Render ainda estão pendentes.
+> **Status:** protótipo jogável (alpha), atualizado em **2026-11-24**.
+> Combate, defesa, IA, movimentação, animação do Plasmo, controles touch/teclado, modos Jogador vs CPU / CPU vs CPU e a campanha de 5 fases (rounds, cronômetro, pontuação e resultado) estão implementados.
+> Progresso persistente/save, seleção de personagem, gamepad, áudio, validação em celular físico, licenças de assets e publicação no Render ainda estão pendentes.
 
 ## Estado atual
 
@@ -15,18 +15,19 @@ Jogo de luta tradicional em visão lateral, concebido sob a abordagem **Mobile F
 - Combate com quatro golpes: leve, médio, forte e chute, com startup, active e recovery.
 - Defesa direcional em pé e agachado, com chip apenas no forte, blockstun, empurrão e efeito visual.
 - Esquiva por pulo, atravessar o oponente no ar, knockback com atrito e hitstun.
-- IA com três dificuldades, reação com atraso, aproximação, corrida, esquiva, bloqueio e punição.
-- Modos **Jogador vs CPU** (`pvc`) e **CPU vs CPU** (`cvc`).
-- Menu inicial, seleção de dificuldade, tela cheia e aviso de rotação.
+- IA com cinco perfis (três no menu; `elite`/`lendario` na campanha), reação com atraso, aproximação, corrida, esquiva, bloqueio e punição.
+- Modos **Jogador vs CPU** (`pvc`), **CPU vs CPU** (`cvc`) e **Campanha · 5 fases**.
+- Menu inicial com chips das 5 fases, seleção de dificuldade, tela cheia e aviso de rotação.
 - Controles touch multi-touch por `pointerId` e teclado unificado pelo `InputManager`.
-- HUD com barras de vida, status `READY`/`ROUND END` e botão de reinício.
-- Arte real do Plasmo (Player 01) por estado; oponente em atlas placeholder.
+- HUD com barras de vida e status; na campanha, fase/round, cronômetro, pontuação e overlay de resultado; botão de reinício.
+- Campanha de 5 fases escalonadas (vida, paleta, escala e IA crescem), melhor de 3 rounds, bônus de fase e perfis de IA `elite`/`lendario`.
+- Arte real do Plasmo (Player 01) por estado; oponente em atlas placeholder por paleta de fase.
 - Overlay de debug (`?debug=1`) e pré-seleção de dificuldade (`?diff=`).
-- 88 checks automatizados em 18 suítes (`npm test`).
+- 110 checks automatizados em 12 arquivos, 25 suítes (`npm test`).
 
 ### Ainda não implementado
 
-- Cronômetro, rounds, placar, tela de resultado e reinício automático de partida.
+- Progresso persistente da campanha (save), seleção de personagem e desbloqueios (Sable planejada).
 - Gamepad.
 - Áudio, volume e mute.
 - Pausa explícita ao trocar de aba/perder foco.
@@ -46,7 +47,7 @@ O jogador pode andar, correr, pular, agachar, defender e executar quatro tipos d
 | Forte | Golpe mais lento, com maior dano, chip no bloqueio e knockback. |
 | Perna | Chute baixo, capaz de furar a defesa em pé. |
 
-O objetivo atual é zerar a vida do oponente. Não há rounds nem cronômetro: ao chegar a zero, o status muda para `ROUND END` e o jogador reinicia manualmente pelo botão **REINICIAR**.
+Há dois formatos: a **partida rápida** (`pvc`/`cvc`), em que o objetivo é zerar a vida do oponente e, ao chegar a zero, o status muda para `ROUND END` (reinício manual pelo botão **REINICIAR**); e a **campanha de 5 fases**, com melhor de 3 rounds, cronômetro por round, vitória por nocaute ou maior vida no tempo, pontuação acumulada e tela de resultado com próxima fase/tentar novamente.
 
 ## Estratégia Mobile First
 
@@ -132,7 +133,7 @@ O `preview` serve a build para verificação local; ele não substitui um servid
 npm test
 ```
 
-Estado atual: **10 arquivos de teste, 18 suítes e 88 checks aprovados**.
+Estado atual: **12 arquivos de teste, 25 suítes e 110 checks aprovados**.
 
 ## Controles
 
@@ -309,7 +310,7 @@ Somente quando forem implementados recursos que precisam de estado compartilhado
 
 ## Limitações conhecidas
 
-- Sem rounds, cronômetro, placar ou tela de resultado.
+- Sem save/progressão persistente da campanha, seleção de personagem ou desbloqueios.
 - Sem gamepad.
 - Sem áudio.
 - Sem pausa explícita ao ocultar a aba.
