@@ -21,17 +21,17 @@ Jogo de luta tradicional em visão lateral, concebido sob a abordagem **Mobile F
 - Controles touch multi-touch por `pointerId` e teclado unificado pelo `InputManager`.
 - HUD com barras de vida e status; na campanha, fase/round, cronômetro, pontuação e overlay de resultado; botão de reinício.
 - Campanha de 5 fases escalonadas (vida, paleta, escala e IA crescem), melhor de 3 rounds, bônus de fase e perfis de IA `elite`/`lendario`.
-- Arte real do Plasmo (Player 01) por estado; oponente em atlas placeholder por paleta de fase.
+- Arte real do Plasmo (Player 01) e da Sable (adversária da fase 3), carregada por estado, com kits de personagem em `roster.js`.
 - Overlay de debug (`?debug=1`) e pré-seleção de dificuldade (`?diff=`).
-- 110 checks automatizados em 12 arquivos, 25 suítes (`npm test`).
+- 137 checks automatizados em 15 arquivos, 33 suítes (`npm test`).
 
 ### Ainda não implementado
 
-- Progresso persistente da campanha (save), seleção de personagem e desbloqueios (Sable planejada).
+- Progresso persistente da campanha (save), seleção de personagem e desbloqueios.
 - Gamepad.
 - Áudio, volume e mute.
 - Pausa explícita ao trocar de aba/perder foco.
-- Segundo personagem com arte real e arena com arte final.
+- Arena com arte final.
 - Validação em aparelho Android/iOS físico.
 - Publicação no Render e URL pública.
 - Licença do código e registro de origem/licença dos assets.
@@ -133,7 +133,7 @@ O `preview` serve a build para verificação local; ele não substitui um servid
 npm test
 ```
 
-Estado atual: **14 arquivos de teste, 30 suítes e 129 checks aprovados**.
+Estado atual: **15 arquivos de teste, 33 suítes e 137 checks aprovados**.
 
 ## Controles
 
@@ -243,7 +243,7 @@ Universe_Showdown/
 - A defesa é direcional: segurar o recuo. A postura define o que é bloqueado.
 - A IA emite ações no mesmo formato do teclado/touch; o `Fighter` não sabe quem está controlando.
 - A simulação roda em passo fixo; a animação avança no mesmo passo, não no `requestAnimationFrame`.
-- O Plasmo usa uma atlas PNG por estado, com âncoras por frame; o oponente usa uma atlas procedural placeholder.
+- Plasmo e Sable usam uma atlas PNG por estado, com âncoras por frame; o oponente sem kit usa uma atlas procedural placeholder.
 - O HUD é DOM; o Canvas desenha arena, lutadores e efeitos.
 
 Fontes de verdade:
@@ -255,7 +255,7 @@ Fontes de verdade:
 | Separação de corpos e face | `src/game/physics.js` |
 | IA | `src/ai/CPUController.js` |
 | Controles | `src/config/controls.js` + `src/core/InputManager.js` |
-| Animação | `src/characters/Plasmo.js`, `animations.js`, `SpriteAnimator.js` |
+| Animação | `src/characters/Plasmo.js`, `Sable.js`, `roster.js`, `animations.js`, `SpriteAnimator.js` |
 | Assets | `ASSETS-ATLAS.md` |
 | Regressão | `tests/*.test.mjs` |
 

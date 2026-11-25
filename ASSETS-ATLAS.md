@@ -127,7 +127,9 @@ O formato continua compatível com JSON e com o template `public/assets/characte
 | `activeFrom`, `activeTo` | Índices de frames ativos (contato visual). |
 | `frameAnchors` | Pivô horizontal **por frame** (px dentro da célula). |
 
-## 4. Inventário atual do Plasmo
+## 4. Inventário atual das atlases
+
+### 4.1 Plasmo
 
 Fonte de verdade: `src/characters/Plasmo.js`. Dimensões conferidas nos PNGs em `public/assets/characters/plasmo/`.
 
@@ -154,6 +156,38 @@ Observações:
 - `jump` tem 25 frames: os 16 primeiros cobrem o tempo de ar da física; os 9 restantes são a recuperação de aterrissagem em solo (`airFrames = 16` em `Fighter.js`).
 - Não há estados `victory`/`defeat` nem animação de nocaute.
 
+### 4.2 Sable
+
+Fonte de verdade: `src/characters/Sable.js`. PNGs em `public/assets/characters/sable/`, gerados por `scripts/extract-sable.ps1` a partir das spritesheets com fundo transparente do autor (pasta externa, `meta.json` por folha — ver CREDITS.md para a origem).
+
+`meta` padrão: célula **192 × 192**, `pivotX = 96`, `pivotY = 192` (todos os estados).
+
+| Estado | Arquivo | Frames | Timing | Loop | Ativo |
+|---|---|---:|---|---|---|
+| `idle` | `idle.png` | 6 | 8 fps | Sim | — |
+| `walk` | `walk.png` | 7 | 10 fps | Sim | — |
+| `run` | `run.png` | 5 | 14 fps | Sim | — |
+| `jump` | `jump.png` | 5 | `frameTime = 0,2` | Não | — |
+| `crouch` | `crouch.png` | 3 | 8 fps | Não | — |
+| `block` | `block.png` | 4 | 6 fps | Não | — |
+| `hit` | `hit.png` | 6 | 20 fps | Não | — |
+| `lightAttack` | `lightAttack.png` | 2 | `frameTime = 0,14` | Não | 1–1 |
+| `mediumAttack` | `mediumAttack.png` | 4 | `frameTime = 0,12` | Não | 2–2 |
+| `heavyAttack` | `heavyAttack.png` | 4 | `frameTime = 0,18` | Não | 1–2 |
+| `kick` | `heavyAttack.png` | 4 | `frameTime = 0,13` | Não | 1–2 |
+
+Observações:
+
+- **Escala de paridade:** o extrator mede a altura de conteúdo do `idle` (168 px na fonte) e aplica a escala global `96 / 168 ≈ 0,5714` em TODOS os estados — mesma proporção relativa entre poses do Plasmo (agachar continua mais baixo que estar em pé) e conteúdo de pé = 96 px ⇒ `renderScale: 1`.
+- Cada frame é recortado pelo bounding box dos pixels visíveis (`A > 20`), centralizado na horizontal e com os **pés na base da célula**; o arco do pulo vem da física, não da arte.
+- `kick` **não tem arte própria na fonte**: reutiliza `heavyAttack.png` (cena agachada, coerente com o chute baixo) — substituição explícita em `Sable.js`, como `run → walk` no Plasmo. Não existe `kick.png` nesta pasta.
+- Folhas da fonte sem estado no runtime: `caminhando_tras` (andar para trás usa o `walk` espelhado) e `levantando` (levantar usa o `idle`) — parity com o Plasmo, que também não tem estados próprios.
+- `jump`: 4 frames no ar (4 × 0,2 = 0,8 s = voo medido da física com impulso `vy = 620`) + frame de pouso segurado no chão pelo `landingTimer` (`SABLE_JUMP_ANIM`, `airFrames: 4`). O ápice físico (0,413 s) cai no frame 2.
+- `block`: 4 frames com a guarda já formada no frame 0 e a aura crescendo até o escudo completo. `SABLE_BLOCK_ANIM = { frames: 4, frameTime: 1/3 }` — **mesma duração total** do kit padrão (8 × 1/6 s) para o tempo de recuperação de bloqueio não mudar.
+- `crouch` desce uma vez e trava na pose mais funda (`loop: false`); a folha progride de em pé-parcial → fundo, então em loop ficaria "pulsando".
+- `hit` tem 6 frames em 0,3 s (fps 20) = mesma duração de hitstun do Plasmo.
+- `hurtbox.height` (105) só posiciona rótulo/debug; o combate usa `halfWidth` (42).
+
 ## 5. Âncora por frame (`frameAnchors`)
 
 O desenho ancora em `-anchorX`, não no centro da célula. `getFrameRect()` resolve a prioridade:
@@ -165,30 +199,31 @@ frameAnchors[i] → anchorX (estado) → pivotX (meta)
 Como o `scale(face, 1)` do renderer gira em torno desse ponto, o corpo permanece no mesmo eixo do lutador ao trocar de face — só braços e pernas trocam de lado. Sem isso, o sprite “pula” lateralmente ao virar.
 
 - Placeholder (grade 96 × 96, corpo centrado): `pivotX = 48` já é a âncora.
-- Plasmo: cada estado tem `frameAnchors` medido frame a frame como a média horizontal dos pixels visíveis (`A > 20`).
-- O pulo é o caso mais crítico: o centro de massa varia dezenas de pixels entre poses (célula de 161 px).
+- Plasmo e Sable: cada estado tem `frameAnchors` medido frame a frame como a média horizontal dos pixels visíveis (`A > 20`). Na Sable a medição sai direto do `extract-sable.ps1` (imprime os arrays na saída); no Plasmo, pelo `measure-anchors.ps1`.
+- O pulo é o caso mais crítico: o centro de massa varia dezenas de pixels entre poses. Na Sable, o `mediumAttack` também varia (~25 px no frame estendido) — sem âncora por frame, o corpo deslizaria durante o golpe.
 - Regenerar após trocar os PNGs:
 
   ```powershell
-  powershell -File scripts/measure-anchors.ps1
+  powershell -File scripts/measure-anchors.ps1                      # Plasmo (mapa fixo)
+  powershell -File scripts/measure-anchors.ps1 -Src <pasta> -CellWidth 192   # Sable/Outro
   ```
 
-  Copie os arrays `anchorX` gerados para `frameAnchors` em `src/characters/Plasmo.js`.
+  Copie os arrays `anchorX`/`frameAnchors` gerados para `src/characters/Plasmo.js` ou `src/characters/Sable.js`.
 
-O teste `tests/mirror.test.mjs` confere que todo estado tem `frameAnchors.length === frames`, que cada âncora está dentro da célula e que `run` reutiliza as âncoras de `walk`.
+O teste `tests/mirror.test.mjs` confere que todo estado (Plasmo e Sable) tem `frameAnchors.length === frames`, que cada âncora está dentro da célula e que `run` reutiliza as âncoras de `walk` no Plasmo.
 
 ## 6. Sincronia com a hitbox
 
 `activeFrom`/`activeTo` devem casar com `activeStart`/`activeEnd` de `ATTACKS` (`src/fighters/Fighter.js`):
 
 ```text
-activeFrom ≈ floor((activeStart / duration) × frames)
-activeTo   ≈ floor((activeEnd   / duration) × frames)
+activeFrom = floor(activeStart / frameTime)     frame em que a janela começa
+activeTo   = ceil(activeEnd   / frameTime) - 1  último frame com tempo > activeStart
 ```
 
-A fórmula é uma aproximação: o índice final é ajustado manualmente para coincidir com o frame em que o membro realmente alcança o alvo na arte. Por isso alguns valores da tabela não batem exatamente com o cálculo (ex.: chute).
+`activeEnd` é o FIM da janela: se ele cai exatamente no início de um frame (ex.: chute, 0,39 s = início do frame 3), esse frame **não** é ativo — por isso o `ceil(…) - 1`. O `ε = 1e-9` nas bordas absorve erro de ponto flutuante (`0,39 / 0,13 = 3,0000…1`). Com `frameTime = duração / frames`, a fórmula é equivalente a `(activeStart / duration) × frames` e reproduz **todos** os valores do Plasmo e da Sable — contrato verificado em `tests/sable.test.mjs`.
 
-Mapeamento atual:
+Mapeamento atual (Plasmo):
 
 | Golpe | Duração | Janela ativa | Frames | `activeFrom`–`activeTo` |
 |---|---:|---:|---:|---:|
@@ -197,7 +232,9 @@ Mapeamento atual:
 | Forte | 0,72 s | 0,32–0,50 s | 16 | 7–11 |
 | Chute | 0,52 s | 0,13–0,39 s | 4 | 1–2 |
 
-Quando o golpe for reajustado no combate, recalcular os índices aqui e em `Plasmo.js`. O critério de aceite é: **o frame de contato visual coincide com a janela em que a hitbox causa dano**.
+Sable (mesmos tempos de `ATTACKS`, menos frames por golpe): leve 1–1 (2 f × 0,14), médio 2–2 (4 f × 0,12), forte 1–2 (4 f × 0,18) e chute 1–2 (4 f × 0,13, arte do forte).
+
+Quando o golpe for reajustado no combate, recalcular os índices aqui e em `Plasmo.js`/`Sable.js`. O critério de aceite é: **o frame de contato visual coincide com a janela em que a hitbox causa dano**.
 
 ## 7. Pipeline de desenho (runtime)
 
@@ -222,9 +259,11 @@ Pontos-chave:
 - O renderer escolhe a imagem do estado atual (`stateImages.get(stateName)`) e cai para a atlas placeholder quando a arte daquele estado ainda não carregou.
 - O carregamento das PNGs do Plasmo é assíncrono; o placeholder cobre o intervalo até a imagem estar disponível.
 
-## 8. Pipeline de produção dos sprites do Plasmo
+## 8. Pipeline de produção dos sprites
 
-O script `scripts/extract-plasmo.ps1` documenta o processo usado:
+### Plasmo — `scripts/extract-plasmo.ps1`
+
+O script documenta o processo usado:
 
 1. Origem: spritesheets em JPEG, com fundo preto e grades variadas.
 2. Chroma key para remover o fundo.
@@ -239,6 +278,18 @@ Limitações do pipeline:
 - Os caminhos padrão apontam para a máquina do autor e precisam ser parametrizados.
 - O script de extração assume JPEGs de origem e parâmetros de célula próprios; a atlas final é específica do Plasmo.
 - Não há automação em CI para regenerar ou validar as imagens.
+
+### Sable — `scripts/extract-sable.ps1`
+
+1. Origem: spritesheets PNG com **fundo transparente** (uma folha por estado) + `meta.json` com `frames`/`frame_w`/`frame_h` — parâmetro `-Source` (a pasta é externa ao repositório; ver CREDITS.md).
+2. Valida a folha contra a `meta.json` (largura = `frames × frame_w`).
+3. Recorte por bounding box dos pixels visíveis (`A > 20`) — sem chroma key, o fundo já é transparente.
+4. Escala **global** `96 / altura_de_pé_do_idle` (0,5714 na fonte atual) aplicada a todos os estados, preservando as proporções entre poses.
+5. Centraliza na horizontal e posiciona com **pés na base** da célula de saída (192 × 192).
+6. Mede o centro de massa por frame na célula de saída e **imprime `frameAnchors`** para colar em `src/characters/Sable.js`.
+7. Remove `kick.png` órfão (o kick usa a arte do `heavyAttack`).
+
+Validação: `tests/sable.test.mjs` confere, para cada estado, que o PNG existe e que suas dimensões são `frames × 192` (lidas no IHDR, sem dependência externa).
 
 ## 9. Placeholder, fallback e arte real
 

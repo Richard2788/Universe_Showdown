@@ -129,11 +129,14 @@ export class HUD {
    * Rótulos ao iniciar uma partida rápida (modo e dificuldade da CPU).
    * @param {'pvc'|'cvc'} mode
    * @param {string} difficultyLabel
+   * @param {string} [enemyName='CPU'] nome do oponente quando ele tem kit
+   *   próprio (ex.: SABLE); sem kit, continua 'CPU'. A dificuldade entra
+   *   no rótulo em todos os casos.
    */
-  setMatchLabels(mode, difficultyLabel) {
+  setMatchLabels(mode, difficultyLabel, enemyName = 'CPU') {
     const cvc = mode === 'cvc';
     this.playerLabel.textContent = cvc ? `CPU 01 · ${difficultyLabel}` : 'PLAYER 01';
-    this.enemyLabel.textContent = cvc ? `CPU 02 · ${difficultyLabel}` : `CPU · ${difficultyLabel}`;
+    this.enemyLabel.textContent = cvc ? `CPU 02 · ${difficultyLabel}` : `${enemyName} · ${difficultyLabel}`;
   }
 
   /**
@@ -141,10 +144,11 @@ export class HUD {
    * No menu, nada é escrito (mesmo comportamento anterior).
    * @param {'menu'|'pvc'|'cvc'|'campanha'} mode
    * @param {string} difficultyLabel
+   * @param {string} [enemyName='CPU'] nome do oponente com kit próprio
    */
-  setDifficultyLabel(mode, difficultyLabel) {
+  setDifficultyLabel(mode, difficultyLabel, enemyName = 'CPU') {
     if (mode === 'menu') return;
-    this.enemyLabel.textContent = mode === 'cvc' ? `CPU 02 · ${difficultyLabel}` : `CPU · ${difficultyLabel}`;
+    this.enemyLabel.textContent = mode === 'cvc' ? `CPU 02 · ${difficultyLabel}` : `${enemyName} · ${difficultyLabel}`;
     if (mode === 'cvc') this.playerLabel.textContent = `CPU 01 · ${difficultyLabel}`;
   }
 }

@@ -134,9 +134,16 @@ export class CPUController {
 
   rand([min, max]) { return min + Math.random() * (max - min); }
 
+  /**
+   * Kit de golpes do lutador controlado (padrão: ATTACKS global).
+   * A CPU decide com os MESMOS golpes que o Fighter executa — personagem
+   * com kit próprio (ex.: Sable) não precisa de nenhuma troca aqui.
+   */
+  get attacks() { return this.fighter?.attacks ?? ATTACKS; }
+
   /** Alcance efetivo de um golpe: mesma condição de acerto do Fighter + margem. */
   rangeOf(name) {
-    return ATTACKS[name].reach + this.opponent.hurtbox.halfWidth - 2;
+    return this.attacks[name].reach + this.opponent.hurtbox.halfWidth - 2;
   }
 
   /** Maior alcance entre os golpes permitidos (para decidir aproximar). */
@@ -152,7 +159,7 @@ export class CPUController {
   pickAttack(dist) {
     const targetY = this.opponent.y;
     const pool = this.profile.allowedAttacks.filter((n) => {
-      const atk = ATTACKS[n];
+      const atk = this.attacks[n];
       if (dist > this.rangeOf(n) || targetY >= atk.maxTargetY) return false;
       // Golpe alto passa por cima de quem agacha — não adianta usá-lo.
       if (atk.height === 'high' && this.opponent.crouch) return false;
@@ -163,7 +170,7 @@ export class CPUController {
     // vs agachado: o chute (low) acerta e fura o block em pé — peso dobrado.
     const weightOf = (n) => {
       let w = weights[n] ?? 1;
-      if (this.opponent.crouch && ATTACKS[n].height === 'low') w *= 2;
+      if (this.opponent.crouch && this.attacks[n].height === 'low') w *= 2;
       return w;
     };
     let total = 0;
@@ -212,7 +219,7 @@ export class CPUController {
     if (this.sawAttack && !this.reacted && dist < BLOCK_RANGE && this.time >= this.reactAt) {
       this.reacted = true;
       // Chute (low) fura a guarda em pé: bloquear tradicionalmente é agachar.
-      this.crouchBlock = Boolean(o.attack && ATTACKS[o.attackName]?.height === 'low');
+      this.crouchBlock = Boolean(o.attack && this.attacks[o.attackName]?.height === 'low');
       if (Math.random() < p.dodgeChance) {
         // Esquiva em vez de bloquear (só sorteio; o bloqueio é o padrão).
         this.crouchBlock = false;
@@ -236,7 +243,7 @@ export class CPUController {
     if (p.punish && oExposed && o.y < 110) {
       for (const name of ATTACK_ORDER) {
         if (!p.allowedAttacks.includes(name)) continue;
-        if (o.y >= ATTACKS[name].maxTargetY) continue; // golpe não alcança a altura
+        if (o.y >= this.attacks[name].maxTargetY) continue; // golpe não alcança a altura
         if (dist <= this.rangeOf(name)) {
           a[name] = true;
           this.intent = 'pause'; this.intentTimer = 0.12;

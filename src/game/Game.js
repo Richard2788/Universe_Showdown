@@ -1,9 +1,9 @@
-import { Fighter } from '../fighters/Fighter.js';
+import { Fighter, ATTACKS, JUMP_ANIM, BLOCK_ANIM } from '../fighters/Fighter.js';
 import { CanvasRenderer } from '../rendering/CanvasRenderer.js';
 import { SpriteAnimator, loadAtlasImage } from '../rendering/SpriteAnimator.js';
 import { ANIMATION_DATA } from '../characters/animations.js';
 import { buildPlaceholderAtlas } from '../characters/PlaceholderAtlas.js';
-import { PLASMO_DATA } from '../characters/Plasmo.js';
+import { ROSTER, getKit } from '../characters/roster.js';
 import { CPUController, DIFFICULTIES } from '../ai/CPUController.js';
 import { InputManager } from '../core/InputManager.js';
 import { RunDetector } from '../core/RunDetector.js';
@@ -24,15 +24,28 @@ export class Game {
     this.hud = new HUD();
     this.input = new InputManager();
     this.runDetector = new RunDetector(); // duplo-toque da direção → corrida
-    this.player = new Fighter(PLAYER_SPAWN_X, '#51e3e8', 1, {
+    // Kits dos lutadores (roster.js). O jogador é o Plasmo por padrão;
+    // `?player=<id>` é override de desenvolvimento para testar o kit de
+    // outro personagem antes do desbloqueio. O oponente padrão continua
+    // placeholder (enemyKit null); `?enemy=sable` e a fase 3 da campanha
+    // aplicam o kit da Sable — ambos caem no getKit.
+    const params = new URLSearchParams(window.location.search);
+    this.playerKit = getKit(params.get('player')) ?? ROSTER.plasmo;
+    this.enemyKit = getKit(params.get('enemy'));
+    this.player = new Fighter(PLAYER_SPAWN_X, this.playerKit.color, 1, {
       // Plasmo: conteúdo normalizado a ~96px (metade do mais alto); escala
       // total 1.1 × 1 ≈ mesmo tamanho do placeholder (~105 px).
-      renderScale: 1,
-      hurtboxHalfWidth: 48,
-      hurtboxHeight: 100,
+      renderScale: this.playerKit.renderScale,
+      hurtboxHalfWidth: this.playerKit.hurtbox.halfWidth,
+      hurtboxHeight: this.playerKit.hurtbox.height,
+      attacks: this.playerKit.attacks,
+      jumpAnim: this.playerKit.jumpAnim,
+      blockAnim: this.playerKit.blockAnim,
     });
     this.enemy = new Fighter(ENEMY_SPAWN_X, '#ff638c', -1);
+    this.kitArtLoads = new Map();
     this.setupAnimators();
+    if (this.enemyKit) this.applyEnemyKit(this.enemyKit);
     // ── Campanha: rounds, cronômetro e pontuação ──
     // O MatchManager não conhece DOM/Fighter: o Game informa a vida no
     // snapshot e reage aos eventos (roundStart/roundEnd/phaseEnd).
@@ -68,7 +81,7 @@ export class Game {
       document.addEventListener(event, onFullscreenChange);
     }
     // Modo debug: ?debug=1 exibe hitboxes, posição e estado dos lutadores.
-    const params = new URLSearchParams(window.location.search);
+    // (`params` foi lido no topo do construtor, junto com os kits.)
     this.debug = isDebugEnabled();
     this.renderer.debug = this.debug;
     // ── IA da CPU ──
@@ -97,25 +110,79 @@ export class Game {
    * intervalo. Quando houver arte do oponente, siga o mesmo padrão.
    */
   setupAnimators() {
-    const playerAtlas = buildPlaceholderAtlas('#51e3e8');
+    const playerAtlas = buildPlaceholderAtlas(this.playerKit.color);
     const enemyAtlas = buildPlaceholderAtlas('#ff638c');
     this.fighterAnimators = new Map([
-      [this.player, new SpriteAnimator(playerAtlas, PLASMO_DATA)],
+      [this.player, new SpriteAnimator(playerAtlas, this.playerKit.data)],
       [this.enemy, new SpriteAnimator(enemyAtlas, ANIMATION_DATA)],
     ]);
     for (const [fighter, animator] of this.fighterAnimators) {
       this.renderer.setAnimator(fighter, animator);
     }
-    const states = Object.keys(PLASMO_DATA.states);
-    // query string de cache-busting para forçar recarregamento de assets alterados
-    const cacheBust = '?v=20261123-block-hit';
-    Promise.all(states.map((name) =>
-      loadAtlasImage(`/assets/characters/plasmo/${PLASMO_DATA.states[name].image}${cacheBust}`)
-        .then((img) => this.fighterAnimators.get(this.player)?.setImage(name, img))
-    )).then(() => {
+    this.applyKitArt(this.player, this.playerKit);
+  }
+
+  /** Carrega uma vez as imagens de um kit e as reutiliza em novos rounds. */
+  loadKitArt(kit) {
+    if (!this.kitArtLoads.has(kit.id)) {
+      const { data, folder, cacheBust = '' } = kit;
+      const load = Promise.all(Object.entries(data.states).map(([name, state]) =>
+        loadAtlasImage(`/assets/characters/${folder}/${state.image}${cacheBust}`)
+          .then((image) => [name, image])
+      )).then((entries) => new Map(entries));
+      this.kitArtLoads.set(kit.id, load);
+    }
+    return this.kitArtLoads.get(kit.id);
+  }
+
+  /** Aplica a arte do kit somente se ele ainda estiver ativo no animador. */
+  applyKitArt(fighter, kit) {
+    this.loadKitArt(kit).then((images) => {
+      const animator = this.fighterAnimators.get(fighter);
+      if (!animator || animator.data !== kit.data) return;
+      for (const [state, image] of images) animator.setImage(state, image);
       this.renderer.usesPlaceholder = [...this.renderer.animators.values()]
-        .some((a) => !a.hasRealArt?.());
-    }).catch((error) => console.error('[Universe Showdown] atlas do Plasmo falhou:', error));
+        .some((item) => !item.hasRealArt?.());
+    }).catch((error) => {
+      console.error(`[Universe Showdown] atlas de ${kit.label} falhou:`, error);
+    });
+  }
+
+  /** Copia as propriedades de combate e de exibição definidas por um kit. */
+  configureFighterKit(fighter, kit) {
+    fighter.color = kit.color;
+    fighter.renderScale = kit.renderScale;
+    fighter.hurtbox = { halfWidth: kit.hurtbox.halfWidth, height: kit.hurtbox.height };
+    fighter.attacks = kit.attacks;
+    fighter.jumpAnim = kit.jumpAnim;
+    fighter.blockAnim = kit.blockAnim;
+    fighter.blockAnimTime = kit.blockAnim.frames * kit.blockAnim.frameTime;
+  }
+
+  /**
+   * Restaura o kit padrão (Plasmo) num oponente placeholder. Sem isto, um
+   * oponente SEM kit depois de uma fase com kit herdaria o attacks/jumpAnim/
+   * blockAnim do personagem anterior (hoje idênticos ao padrão; a Fase 3,
+   * com SABLE_ATTACKS próprios, faria a diferença).
+   */
+  resetEnemyKitDefaults() {
+    this.enemy.attacks = ATTACKS;
+    this.enemy.jumpAnim = JUMP_ANIM;
+    this.enemy.blockAnim = BLOCK_ANIM;
+    this.enemy.blockAnimTime = BLOCK_ANIM.frames * BLOCK_ANIM.frameTime;
+  }
+
+  /** Troca o kit do inimigo sem recriar o Fighter nem vazar animadores. */
+  applyEnemyKit(kit) {
+    this.enemyKit = kit;
+    this.configureFighterKit(this.enemy, kit);
+    const animator = this.fighterAnimators.get(this.enemy);
+    if (!animator) return;
+    animator.setData(kit.data);
+    // Há uma tela intermediária enquanto o PNG carrega; esta atlas preserva
+    // o fallback sem bloquear a fase e é substituída por applyKitArt.
+    animator.atlas = buildPlaceholderAtlas(kit.color);
+    this.applyKitArt(this.enemy, kit);
   }
 
   resize() {
@@ -262,8 +329,9 @@ export class Game {
     this.runDetector.reset();
     const label = DIFFICULTIES[this.difficulty].label;
     this.renderer.playerLabel = mode === 'cvc' ? 'CPU 01' : 'YOU';
-    this.renderer.enemyLabel = mode === 'cvc' ? 'CPU 02' : 'CPU';
-    this.hud.setMatchLabels(mode, label);
+    // Oponente com kit (ex.: Sable) mostra o NOME dele; sem kit, 'CPU'.
+    this.renderer.enemyLabel = mode === 'cvc' ? 'CPU 02' : (this.enemyKit?.label ?? 'CPU');
+    this.hud.setMatchLabels(mode, label, this.enemyKit?.label);
   }
 
   /** Eventos emitidos pelo MatchManager (rounds/fases da campanha). */
@@ -312,18 +380,28 @@ export class Game {
 
   /** Configura o oponente e o HUD para a fase atual da campanha. */
   applyPhase(phase, phaseIndex, phaseCount) {
+    const kit = getKit(phase.character);
+    if (kit) this.applyEnemyKit(kit);
+    else {
+      this.enemyKit = null;
+      this.resetEnemyKitDefaults();
+      const animator = this.fighterAnimators.get(this.enemy);
+      if (animator?.data !== ANIMATION_DATA) animator.setData(ANIMATION_DATA);
+    }
     this.enemy.maxHealth = phase.health;
     this.enemy.health = phase.health;
-    this.enemy.color = phase.color;
-    this.enemy.renderScale = phase.renderScale ?? 1;
-    this.enemy.hurtbox = {
-      halfWidth: Math.round(35 * this.enemy.renderScale),
-      height: Math.round(120 * this.enemy.renderScale),
-    };
+    this.enemy.color = kit?.color ?? phase.color;
+    this.enemy.renderScale = kit?.renderScale ?? phase.renderScale ?? 1;
+    this.enemy.hurtbox = kit
+      ? { halfWidth: kit.hurtbox.halfWidth, height: kit.hurtbox.height }
+      : {
+        halfWidth: Math.round(35 * this.enemy.renderScale),
+        height: Math.round(120 * this.enemy.renderScale),
+      };
 
     const animator = this.fighterAnimators.get(this.enemy);
     if (animator) {
-      animator.atlas = this.enemyAtlas(phase);
+      if (!kit) animator.atlas = this.enemyAtlas(phase);
       animator.setState('idle');
       animator.frameIndex = 0;
       animator.timeInFrame = 0;
@@ -349,12 +427,22 @@ export class Game {
 
   /** Restaura o oponente padrão ao sair da campanha para uma partida rápida. */
   resetEnemyForQuickMatch() {
+    const kit = getKit(new URLSearchParams(window.location.search).get('enemy'));
+    if (kit) {
+      this.applyEnemyKit(kit);
+      this.enemy.maxHealth = 100;
+      this.enemy.health = 100;
+      return;
+    }
+    this.enemyKit = null;
+    this.resetEnemyKitDefaults();
     this.enemy.maxHealth = 100;
     this.enemy.color = '#ff638c';
     this.enemy.renderScale = 1;
     this.enemy.hurtbox = { halfWidth: 35, height: 120 };
     const animator = this.fighterAnimators.get(this.enemy);
     if (!animator) return;
+    if (animator.data !== ANIMATION_DATA) animator.setData(ANIMATION_DATA);
     if (!this.enemyAtlasCache.has('default')) {
       this.enemyAtlasCache.set('default', buildPlaceholderAtlas('#ff638c'));
     }
@@ -389,7 +477,7 @@ export class Game {
     this.cpuEnemy.setDifficulty(name);
     if (this.mode !== 'menu') {
       // Atualiza o rótulo do HUD sem interromper o round.
-      this.hud.setDifficultyLabel(this.mode, DIFFICULTIES[name].label);
+      this.hud.setDifficultyLabel(this.mode, DIFFICULTIES[name].label, this.enemyKit?.label);
     }
   }
 

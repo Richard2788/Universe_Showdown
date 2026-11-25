@@ -1,7 +1,7 @@
 # Créditos, origem e licenças de assets — Universe Showdown
 
 > Inventário de código, sprites, fontes, áudio e ferramentas de terceiros.
-> **Atualizado em:** 2026-11-23.
+> **Atualizado em:** 2026-11-24.
 > **Status:** a publicação pública está **bloqueada** até que a licença do código e a origem/licença dos sprites do Plasmo sejam regularizadas.
 
 ## 1. Resumo
@@ -10,6 +10,7 @@
 |---|---|---|---|---|
 | Código | Aplicação Universe Showdown | Repositório GitHub `Richard2788/Universe_Showdown` | A definir (não há `LICENSE`) | Pendente |
 | Personagem | Plasmo (Player 01) | Spritesheets extraídos de JPEGs; pipeline em `extract-plasmo.ps1` | Desconhecida / a confirmar | **Bloqueante** |
+| Personagem | Sable (adversária da fase 3) | Spritesheets PNG com fundo transparente fornecidas pelo autor; normalizadas por `extract-sable.ps1` | Desconhecida / a confirmar | **Bloqueante** |
 | Personagem | Oponente placeholder | Desenho procedural em `PlaceholderAtlas.js` | Original do projeto (a confirmar) | Provisório |
 | Template | `knight.json` | Template de formato de animação | Original do projeto | Sem PNG |
 | Cenário | Arena e parallax | Desenho procedural em `CanvasRenderer.js` | Original do projeto | Provisório |
@@ -65,7 +66,29 @@ Dados de runtime: `src/characters/Plasmo.js`.
 
 **Status:** **origem/licença a confirmar**. Não redistribuir publicamente até a regularização.
 
-### 3.2 Oponente placeholder
+### 3.2 Sable — adversária da fase 3
+
+Arquivos em `public/assets/characters/sable/` (11 atlas PNG, células 192 × 192):
+
+- `idle.png`, `walk.png`, `run.png`, `jump.png`, `crouch.png`, `block.png`, `hit.png`
+- `lightAttack.png`, `mediumAttack.png`, `heavyAttack.png` (o `kick` reutiliza a arte do `heavyAttack`; não há `kick.png`)
+
+Dados de runtime: `src/characters/Sable.js`; kit em `src/characters/roster.js`.
+
+**Origem conhecida:** spritesheets PNG com fundo transparente (uma folha por estado, com `meta.json`) fornecidas pelo autor do projeto a partir de uma pasta externa ao repositório (`spritesheets_lutadora_transparentes`); normalizadas por `scripts/extract-sable.ps1`. As folhas da fonte incluem estados não usados (`caminhando_tras`, `levante…`), omitidos por parity com o Plasmo.
+
+**O que ainda falta registrar:**
+
+- autor/origem artística dos desenhos (mesma questão do Plasmo: são da mesma fonte?);
+- licença ou cessão de uso;
+- permissão para uso comercial e modificação, se aplicável;
+- URL/origem dos arquivos originais;
+- data de aquisição;
+- atribuição exigida.
+
+**Status:** **origem/licença a confirmar**. Não redistribuir publicamente até a regularização.
+
+### 3.3 Oponente placeholder
 
 - Gerado proceduralmente por `src/characters/PlaceholderAtlas.js` em canvas offscreen.
 - Cores e poses definidas em código.
@@ -74,7 +97,7 @@ Dados de runtime: `src/characters/Plasmo.js`.
 
 **Status:** provisório; substituir por arte real e registrar a licença.
 
-### 3.3 Template `knight.json`
+### 3.4 Template `knight.json`
 
 - Arquivo: `public/assets/characters/knight/knight.json`.
 - É apenas um template do formato de animação.
@@ -145,6 +168,7 @@ Quando houver, incluir:
 
 - [ ] Definir e adicionar `LICENSE` para o código.
 - [ ] Registrar autor, origem e licença dos sprites do Plasmo.
+- [ ] Registrar autor, origem e licença dos sprites da Sable.
 - [ ] Confirmar permissão de uso, modificação e distribuição.
 - [ ] Substituir o oponente placeholder por arte com licença registrada.
 - [ ] Registrar licença da arte final do cenário.

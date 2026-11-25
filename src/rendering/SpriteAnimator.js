@@ -35,6 +35,22 @@ export class SpriteAnimator {
     this.stateImages.set(stateName, image);
   }
 
+  /**
+   * Troca o KIT de animação do animador (personagem novo no mesmo lutador).
+   * Zera arte por estado e volta ao 'idle' do kit novo — usado pelo Game
+   * quando aplica o roster (ex.: placeholder → kit real de um oponente).
+   */
+  setData(data) {
+    this.data = data;
+    this.meta = data.meta;
+    this.stateImages.clear();
+    this.stateName = 'idle';
+    this.state = data.states.idle ?? Object.values(data.states)[0];
+    this.frameIndex = 0;
+    this.timeInFrame = 0;
+    this.finished = false;
+  }
+
   /** Há arte real carregada para este animador? */
   hasRealArt() {
     return this.stateImages.size > 0;

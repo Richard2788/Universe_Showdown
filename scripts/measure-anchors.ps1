@@ -10,18 +10,29 @@
 # Uso:
 #   powershell -File scripts/measure-anchors.ps1
 #   powershell -File scripts/measure-anchors.ps1 [pasta-destino] [saida.json]
-# Copie os arrays `anchorX` gerados para `frameAnchors` em Plasmo.js.
+#   powershell -File scripts/measure-anchors.ps1 -Src <pasta> -Out <saida.json> -CellWidth 192
+# Copie os arrays `anchorX` gerados para `frameAnchors` em Plasmo.js/Sable.js.
+# Sem -CellWidth o mapa fixo do Plasmo é usado (comportamento original).
 param(
   [string]$Src = "C:\Users\marxb\Documents\Projects\Escola\Universe_Showdown\public\assets\characters\plasmo",
-  [string]$Out = "C:\Users\marxb\AppData\Local\Temp\opencode\plasmo-anchors.json"
+  [string]$Out = "C:\Users\marxb\AppData\Local\Temp\opencode\plasmo-anchors.json",
+  [int]$CellWidth = 0
 )
 $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName System.Drawing
 
 # Estado → largura da célula de saída (mesmos valores de PLASMO_DATA).
-$States = [ordered]@{
-  idle = 320; walk = 320; jump = 161; crouch = 320; block = 320; hit = 320
-  lightAttack = 320; mediumAttack = 320; heavyAttack = 320; kick = 320
+# Com -CellWidth > 0 a lista é descoberta dos PNGs da pasta e TODOS usam
+# essa largura — personagem de célula única, ex.: a Sable com 192.
+$States = if ($CellWidth -gt 0) {
+  $map = [ordered]@{}
+  Get-ChildItem $Src -Filter *.png | Sort-Object Name | ForEach-Object { $map[$_.BaseName] = $CellWidth }
+  $map
+} else {
+  [ordered]@{
+    idle = 320; walk = 320; jump = 161; crouch = 320; block = 320; hit = 320
+    lightAttack = 320; mediumAttack = 320; heavyAttack = 320; kick = 320
+  }
 }
 
 $result = [ordered]@{}

@@ -44,7 +44,9 @@ const AIR_JUMP_SPEED = WALK_SPEED / 2;
 // Os 16 primeiros cobrem o tempo de ar da física (vy 560 / g 1500 =
 // 0,747 s ≈ 16 × 0,047); os 9 restantes são a recuperação de aterrissagem
 // (splat → poça → reforma) que roda em solo, segurando o estado 'jump'.
-const JUMP_ANIM = { frames: 25, frameTime: 0.047, airFrames: 16 };
+// Exportado porque o kit padrão (roster.js) aponta para ele; cada
+// personagem pode passar um `jumpAnim` próprio em options.
+export const JUMP_ANIM = { frames: 25, frameTime: 0.047, airFrames: 16 };
 
 // Reação de block: UMA jogada por bloqueio bem-sucedido, sem repetir enquanto
 // o recuo é segurado. Começa no primeiro sprite com o escudo já formado e vai
@@ -52,8 +54,11 @@ const JUMP_ANIM = { frames: 25, frameTime: 0.047, airFrames: 16 };
 // com o estado `block` de src/characters/Plasmo.js, mesmo critério do JUMP_ANIM).
 // A reação tem prioridade sobre andar/correr até terminar; depois, segurar para
 // trás mostra 'walk' de novo (o input de block É caminhar para trás).
-const BLOCK_ANIM = { frames: 8, frameTime: 1 / 6 };
-const BLOCK_ANIM_TIME = BLOCK_ANIM.frames * BLOCK_ANIM.frameTime;
+export const BLOCK_ANIM = { frames: 8, frameTime: 1 / 6 };
+// Duração da reação de block do kit padrão (derivada acima). O Fighter usa
+// a versão DERIVADA DO KIT (`this.blockAnimTime`) — este valor fica como
+// referência/documentação do kit padrão.
+export const BLOCK_ANIM_TIME = BLOCK_ANIM.frames * BLOCK_ANIM.frameTime;
 
 export class Fighter {
   /**
@@ -62,10 +67,20 @@ export class Fighter {
    * @param {number} [options.hurtboxHalfWidth] meia-largura da hurtbox (px, mundo)
    * @param {number} [options.hurtboxHeight] altura da hurtbox (px, mundo)
    * @param {number} [options.maxHealth] vida máxima (padrão 100; fases usam mais)
+   * @param {object} [options.attacks] kit de golpes (padrão: ATTACKS deste módulo)
+   * @param {object} [options.jumpAnim] timings do estado 'jump' (padrão: JUMP_ANIM)
+   * @param {object} [options.blockAnim] reação de block {frames, frameTime} (padrão: BLOCK_ANIM)
    */
   constructor(x, color, face, options = {}) {
     this.x = x; this.y = 0; this.vy = 0; this.color = color; this.face = face;
     this.maxHealth = options.maxHealth ?? 100;
+    // Kit do personagem: golpes + tempos de animação. O padrão é o kit do
+    // Plasmo (constantes deste arquivo) — um lutador novo passa o próprio
+    // em options (ex.: Sable em src/characters/Sable.js) sem tocar aqui.
+    this.attacks = options.attacks ?? ATTACKS;
+    this.jumpAnim = options.jumpAnim ?? JUMP_ANIM;
+    this.blockAnim = options.blockAnim ?? BLOCK_ANIM;
+    this.blockAnimTime = this.blockAnim.frames * this.blockAnim.frameTime;
     this.health = this.maxHealth; this.attack = null; this.attackName = null;
     this.attackHit = false; this.crouch = false; this.hitTimer = 0;
     this.jumpBuffer = 0; // janela em que um comando de pulo ainda vale ao aterrissar
@@ -136,7 +151,7 @@ export class Fighter {
           opponent.health -= chip;
           opponent.blockTimer = blockstun;
           // Reação visual: um play por bloqueio bem-sucedido (reinicia aqui).
-          opponent.blockAnimTimer = BLOCK_ANIM_TIME;
+          opponent.blockAnimTimer = opponent.blockAnimTime;
           opponent.blockAnimPulse = true; // re-arm: se a anterior ainda toca, rebobina (Game.js)
           const heavy = this.attackName === 'heavyAttack';
           opponent.x += (this.x >= opponent.x ? -1 : 1)
@@ -204,9 +219,9 @@ export class Fighter {
       if (onGround && !stunned) {
         // Ataques: também só na borda de subida (debounce honesto — vale
         // igual para teclado, touch e CPU, que emite `true` por 1 frame).
-        for (const name of Object.keys(ATTACKS)) {
+        for (const name of Object.keys(this.attacks)) {
           if (actions[name] && !prev[name]) {
-            this.attack = { data: ATTACKS[name], elapsed: 0 };
+            this.attack = { data: this.attacks[name], elapsed: 0 };
             this.attackName = name;
             this.attackHit = false;
             this.blocking = false;
@@ -245,8 +260,8 @@ export class Fighter {
       this.vy = 0;
       if (wasAir) {
         // Pouso: segura o estado 'jump' até a animação terminar no solo.
-        this.landingTimer = Math.max(0, JUMP_ANIM.frames * JUMP_ANIM.frameTime
-          - JUMP_ANIM.airFrames * JUMP_ANIM.frameTime);
+        this.landingTimer = Math.max(0, this.jumpAnim.frames * this.jumpAnim.frameTime
+          - this.jumpAnim.airFrames * this.jumpAnim.frameTime);
         this.justLanded = true; // frame ar → chão: Game fixa o x do oponente
         this.jumpDir = 0; // impulso encerra no pouso
         this.jumpSpeed = 0;

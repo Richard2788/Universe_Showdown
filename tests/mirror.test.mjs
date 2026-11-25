@@ -1,8 +1,8 @@
 /**
  * Espelhamento: âncora por frame (anchorX) no SpriteAnimator e integridade
- * dos frameAnchors do Plasmo.
+ * dos frameAnchors do Plasmo e da Sable.
  *
- * 5 checks. Contrato da decisão "âncora por frame em todos os estados":
+ * Contrato da decisão "âncora por frame em todos os estados":
  * o draw usa -anchorX (frameAnchors[i] → anchorX → pivotX), então o
  * `scale(face, 1)` gira em torno do CORPO — o sprite não desliza ao virar.
  */
@@ -10,6 +10,7 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { SpriteAnimator } from '../src/rendering/SpriteAnimator.js';
 import { PLASMO_DATA } from '../src/characters/Plasmo.js';
+import { SABLE_DATA } from '../src/characters/Sable.js';
 
 const mkData = (stateExtra = {}) => ({
   meta: { frameWidth: 96, frameHeight: 96, pivotX: 48, pivotY: 96, columns: 19 },
@@ -71,5 +72,25 @@ describe('Plasmo — integridade dos frameAnchors', () => {
     assert.equal(run.image, 'walk.png');
     assert.deepEqual(run.frameAnchors, walk.frameAnchors);
     assert.ok(run.fps > walk.fps, 'run deve tocar mais rápido que o walk');
+  });
+});
+
+describe('Sable — integridade dos frameAnchors', () => {
+  it('todo estado tem frameAnchors com 1 âncora dentro da célula', () => {
+    for (const [name, s] of Object.entries(SABLE_DATA.states)) {
+      assert.ok(Array.isArray(s.frameAnchors), `${name}: falta frameAnchors`);
+      assert.equal(s.frameAnchors.length, s.frames,
+        `${name}: frameAnchors (${s.frameAnchors.length}) ≠ frames (${s.frames})`);
+      for (const anchor of s.frameAnchors) {
+        assert.ok(anchor >= 0 && anchor < SABLE_DATA.meta.frameWidth,
+          `${name}: âncora ${anchor} fora da célula`);
+      }
+    }
+    // Evidência de que a âncora por frame importa: o soco médio transfere o
+    // peso para frente (âncora cai ~25 px no frame estendido) e o pulo muda
+    // com a pose — sem isso o corpo deslizaria ao virar/durar o golpe.
+    const medium = SABLE_DATA.states.mediumAttack.frameAnchors;
+    assert.ok(medium[0] - medium[1] > 20,
+      'mediumAttack: frame estendido deve ter âncora bem à frente');
   });
 });

@@ -7,7 +7,7 @@ Formato inspirado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/)
 
 ### Pendente
 
-- Progresso persistente da campanha (save), seleção de personagem e desbloqueios (Sable planejada, entrega própria).
+- Progresso persistente da campanha (save), seleção de personagem e desbloqueios.
 - Gamepad.
 - Áudio.
 - Pausa explícita em `visibilitychange`/perda de foco.
@@ -15,6 +15,22 @@ Formato inspirado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/)
 - Validação em aparelho Android/iOS físico.
 - Publicação no Render.
 - Licença do código e origem/licença dos assets.
+
+### Adicionado
+
+- **Sable — Fase 1 (kit):** `src/characters/roster.js` centraliza kits de personagem (`label`, cor, `folder`, `cacheBust`, `hurtbox`, `renderScale`, `attacks`, `jumpAnim`, `blockAnim`, dados de animação). O `Game` aplica o kit no jogador e no oponente (`configureFighterKit`/`applyEnemyKit`), com `?enemy=sable` como smoke de dev, `?player=<id>` para testar kit alheio e restauração de padrão quando o oponente volta a ser placeholder. `Fighter` aceita `attacks`/`jumpAnim`/`blockAnim` próprios; a CPU lê `opponent.attacks`. A fase 3 da campanha agora é **SABLE** (`config/match.js`).
+- **Sable — Fase 2 (arte):** spritesheets com fundo transparente (pasta externa do autor) normalizadas por `scripts/extract-sable.ps1` (reescrito para a nova fonte com `meta.json`): recorte por bounding box `A > 20`, **escala global 96/168 ≈ 0,5714** de paridade com o Plasmo, centralização horizontal, pés na base, células 192 × 192 e impressão de `frameAnchors` por frame. 11 atlas regeradas em `public/assets/characters/sable/`; `kick` usa a arte do `heavyAttack` (a fonte não tem chute), `run` tem sheet própria.
+- `src/characters/Sable.js` reescrito com os frames reais (jump 5, block 4, heavy 4) e timings sincronizados com `ATTACKS`; `SABLE_JUMP_ANIM` (4 frames no ar = 0,8 s do voo da física) e `SABLE_BLOCK_ANIM` (mesma duração do kit padrão).
+- Rótulo do oponente com **nome do kit** no HUD e no canvas (`SABLE · dificuldade` em partida rápida; campanha já usava `phase.name`).
+
+### Alterado
+
+- `scripts/measure-anchors.ps1` parametrizado (`-Src`/`-Out`/`-CellWidth`) — sem parâmetros mantém o mapa fixo do Plasmo.
+- Hurtbox da Sable: altura visual 105 (paridade com o render de 96 × 1,1).
+
+### Verificado
+
+- `npm test`: **137 checks aprovados**, 33 suítes, 0 falhas (contratos novos: integridade das atlas/IHDR e âncoras da Sable, sincronia de ataques pela fórmula, voo do pulo medido na física, duração do block, substituto do kick e rótulo com nome do kit); `npm run build` concluída sem erro.
 
 ## [2026-11-24] — Pulo travado e bloqueio clássico da CPU
 

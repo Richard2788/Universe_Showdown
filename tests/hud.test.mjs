@@ -51,6 +51,17 @@ describe('HUD', () => {
     assert.equal(elements['#enemy-label'].textContent, 'CPU 02 · MÉDIO');
   });
 
+  it('oponente com kit mostra o NOME dele no rótulo (ex.: SABLE)', () => {
+    const { hud, elements } = makeHUD();
+    hud.setMatchLabels('pvc', 'DIFÍCIL', 'SABLE');
+    assert.equal(elements['#enemy-label'].textContent, 'SABLE · DIFÍCIL');
+    hud.setDifficultyLabel('pvc', 'ELITE', 'SABLE');
+    assert.equal(elements['#enemy-label'].textContent, 'SABLE · ELITE');
+    // Sem kit, o comportamento anterior continua (CPU · dificuldade).
+    hud.setMatchLabels('pvc', 'FÁCIL');
+    assert.equal(elements['#enemy-label'].textContent, 'CPU · FÁCIL');
+  });
+
   it('no menu, atalho de dificuldade não escreve rótulo', () => {
     const { hud, elements } = makeHUD();
     elements['#enemy-label'].textContent = 'INTACTO';
